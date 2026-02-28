@@ -20,18 +20,17 @@
         #comment-section { flex-grow: 1; display: none; flex-direction: column; max-width: 30%; border-left: 2px solid black; padding-left: 15px; }
         #comment-list { flex-grow: 1; overflow-y: auto; margin-top: 10px; font-size: 0.9rem; }
         .comment-item { padding: 8px; border-bottom: 1px solid #ddd; cursor: pointer; }
-        .comment-item b { color: #000; }
         
         .controls { position: fixed; bottom: 0; left: 0; width: 100%; background: white; padding: 20px; border-top: 3px solid black; display: flex; justify-content: center; gap: 20px; z-index: 1000; }
         .post-btn { background: black; color: white; border: none; padding: 12px 40px; font-weight: bold; cursor: pointer; font-family: inherit; }
         
-        /* ADMIN PANEL STYLES */
-        #admin-trigger { position: fixed; bottom: 10px; right: 10px; width: 20px; height: 20px; background: #000; cursor: pointer; z-index: 2000; opacity: 0.1; }
-        #admin-trigger:hover { opacity: 1; }
-        #admin-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 4px solid black; padding: 20px; z-index: 3000; width: 400px; max-height: 80vh; overflow-y: auto; }
-        .admin-row { margin-bottom: 10px; display: flex; flex-direction: column; }
+        /* ADMIN UI */
+        #admin-login-btn { position: fixed; bottom: 20px; right: 20px; background: black; color: white; border: none; padding: 10px; font-size: 10px; cursor: pointer; z-index: 2000; font-family: inherit; }
+        #admin-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 4px solid black; padding: 20px; z-index: 3000; width: 500px; max-height: 85vh; overflow-y: auto; box-shadow: 20px 20px 0px rgba(0,0,0,0.2); }
         table { width: 100%; border-collapse: collapse; font-size: 0.7rem; margin-top: 10px; }
-        th, td { border: 1px solid black; padding: 4px; text-align: left; }
+        th, td { border: 1px solid black; padding: 5px; text-align: left; }
+        .admin-tab-btn { background: #eee; border: 1px solid black; padding: 5px; cursor: pointer; margin-right: 5px; }
+        .active-tab { background: black; color: white; }
     </style>
 </head>
 <body>
@@ -47,7 +46,7 @@
             <img id="upscaled-image" src="" alt="Selected" oncontextmenu="handleRightClick(event)">
             <div id="comment-section">
                 <div id="reply-ui">
-                    <input type="text" id="replyInput" placeholder="ENTER REPLY..." style="width:90%; padding:5px; border:2px solid black;">
+                    <input type="text" id="replyInput" placeholder="ENTER REPLY..." style="width:90%; padding:5px; border:2px solid black; font-family:inherit;">
                     <button class="post-btn" id="replyBtn" style="padding: 5px; margin-top:5px; width:95%;">REPLY</button>
                 </div>
                 <div id="comment-list"></div>
@@ -55,45 +54,60 @@
         </div>
     </div>
 
-    <div class="controls" id="main-controls">
+    <div class="controls">
         <input type="file" id="imageInput" accept="image/*">
         <button class="post-btn" id="postBtn">POST IMAGE</button>
     </div>
 
-    <div id="admin-trigger" onclick="toggleAdminModal()"></div>
+    <button id="admin-login-btn" onclick="toggleAdminModal()">ADMIN ACCESS</button>
 
     <div id="admin-modal">
         <div id="login-form">
             <h3>SIGN IN</h3>
-            <input type="text" id="adminUser" placeholder="Username"><br><br>
-            <input type="password" id="adminPass" placeholder="Password"><br><br>
-            <button onclick="attemptLogin()">Login</button>
-            <button onclick="toggleAdminModal()">Close</button>
+            <input type="text" id="adminUser" placeholder="Username" style="padding:5px; border:2px solid black;"><br><br>
+            <input type="password" id="adminPass" placeholder="Password" style="padding:5px; border:2px solid black;"><br><br>
+            <button onclick="attemptLogin()" class="post-btn" style="padding:10px;">LOGIN</button>
+            <button onclick="toggleAdminModal()" style="border:none; background:none; cursor:pointer; text-decoration:underline;">Cancel</button>
         </div>
+
         <div id="admin-tools" style="display:none;">
-            <h3>ADMIN TOOLS</h3>
-            <p id="user-welcome"></p>
-            <div id="lord-only" style="display:none;">
-                <hr>
+            <div style="display:flex; justify-content: space-between;">
+                <h3 id="user-welcome"></h3>
+                <button onclick="logout()" style="background:red; color:white; border:none; cursor:pointer;">LOGOUT</button>
+            </div>
+            
+            <div id="tab-buttons" style="margin: 15px 0;">
+                <button class="admin-tab-btn active-tab" onclick="showTab('accounts')">Accounts</button>
+                <button class="admin-tab-btn" onclick="showTab('audit')">Audit Log</button>
+            </div>
+
+            <div id="tab-accounts">
                 <h4>ADD ACCOUNT</h4>
                 <input type="text" id="newDisp" placeholder="Display Name"><br>
                 <input type="text" id="newUser" placeholder="Username"><br>
                 <input type="text" id="newPass" placeholder="Password"><br>
-                <button onclick="addAccount()">Create Student</button>
+                <button onclick="addAccount()" style="margin-top:5px;">CREATE STUDENT</button>
                 <hr>
-                <h4>VIEW ACCOUNTS</h4>
+                <h4>MANAGE ACCOUNTS</h4>
                 <table id="accounts-table">
                     <thead><tr><th>Disp</th><th>User</th><th>Pass</th><th>Rank</th></tr></thead>
                     <tbody id="accounts-body"></tbody>
                 </table>
             </div>
-            <button onclick="logout()">Logout</button>
+
+            <div id="tab-audit" style="display:none;">
+                <h4>ACTION LOG</h4>
+                <table id="audit-table">
+                    <thead><tr><th>Admin</th><th>Action</th><th>Target</th><th>Time</th></tr></thead>
+                    <tbody id="audit-body"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, push, onChildAdded, off, remove, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, push, onChildAdded, off, remove, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCHSN6HiR50_sFT7L8p0bOUVDBb3KBpJiY",
@@ -113,86 +127,99 @@
         let currentPostId = null;
         let currentCommentRef = null;
 
-        // --- AUTH LOGIC ---
         window.toggleAdminModal = () => {
             const modal = document.getElementById('admin-modal');
             modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
         };
 
+        window.showTab = (tab) => {
+            document.getElementById('tab-accounts').style.display = tab === 'accounts' ? 'block' : 'none';
+            document.getElementById('tab-audit').style.display = tab === 'audit' ? 'block' : 'none';
+            document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active-tab'));
+            event.target.classList.add('active-tab');
+            if(tab === 'audit') loadAudit();
+        };
+
         window.attemptLogin = async () => {
             const user = document.getElementById('adminUser').value;
             const pass = document.getElementById('adminPass').value;
-            const userSnapshot = await get(ref(db, `users/${user}`));
-            
-            if (userSnapshot.exists() && userSnapshot.val().password === pass) {
-                currentUser = userSnapshot.val();
+            const userSnap = await get(ref(db, `users/${user}`));
+            if (userSnap.exists() && userSnap.val().password === pass) {
+                currentUser = userSnap.val();
                 currentUser.username = user;
-                showAdminTools();
-            } else {
-                alert("Invalid Credentials");
-            }
-        };
-
-        function showAdminTools() {
-            document.getElementById('login-form').style.display = 'none';
-            document.getElementById('admin-tools').style.display = 'block';
-            document.getElementById('user-welcome').innerText = `Logged in as: ${currentUser.display_name} (${currentUser.rank})`;
-            
-            if (currentUser.rank === 'Lord') {
-                document.getElementById('lord-only').style.display = 'block';
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('admin-tools').style.display = 'block';
+                document.getElementById('user-welcome').innerText = `${currentUser.display_name} [${currentUser.rank}]`;
                 loadAccounts();
-            }
-        }
+            } else { alert("Access Denied"); }
+        };
 
         window.logout = () => { location.reload(); };
 
-        // --- LORD TOOLS ---
         window.addAccount = () => {
             const user = document.getElementById('newUser').value;
+            if(!user) return;
             set(ref(db, `users/${user}`), {
                 display_name: document.getElementById('newDisp').value,
                 password: document.getElementById('newPass').value,
                 rank: 'Student'
             });
-            alert("Account Created");
-            loadAccounts();
+            alert("Student Registered.");
         };
 
         function loadAccounts() {
-            onValue(ref(db, 'users'), (snapshot) => {
+            onValue(ref(db, 'users'), (snap) => {
                 const body = document.getElementById('accounts-body');
                 body.innerHTML = '';
-                snapshot.forEach((child) => {
+                snap.forEach(child => {
                     const u = child.val();
-                    const row = `<tr>
-                        <td><input onchange="updateUser('${child.key}', 'display_name', this.value)" value="${u.display_name}"></td>
+                    body.innerHTML += `<tr>
+                        <td><input onchange="window.updateU('${child.key}','display_name',this.value)" value="${u.display_name}"></td>
                         <td>${child.key}</td>
-                        <td><input onchange="updateUser('${child.key}', 'password', this.value)" value="${u.password}"></td>
-                        <td><input onchange="updateUser('${child.key}', 'rank', this.value)" value="${u.rank}"></td>
+                        <td><input onchange="window.updateU('${child.key}','password',this.value)" value="${u.password}"></td>
+                        <td><input onchange="window.updateU('${child.key}','rank',this.value)" value="${u.rank}"></td>
                     </tr>`;
-                    body.innerHTML += row;
                 });
             });
         }
 
-        window.updateUser = (userKey, field, value) => {
-            set(ref(db, `users/${userKey}/${field}`), value);
-        };
+        window.updateU = (key, field, val) => set(ref(db, `users/${key}/${field}`), val);
 
-        // --- FEED & MODERATION ---
-        onChildAdded(postsRef, (snapshot) => {
+        function logAction(action, target) {
+            push(ref(db, 'audit_log'), {
+                admin: currentUser.display_name,
+                action: action,
+                target: target,
+                time: new Date().toLocaleString()
+            });
+        }
+
+        function loadAudit() {
+            onValue(ref(db, 'audit_log'), (snap) => {
+                const body = document.getElementById('audit-body');
+                body.innerHTML = '';
+                snap.forEach(child => {
+                    const l = child.val();
+                    body.innerHTML = `<tr><td>${l.admin}</td><td>${l.action}</td><td>${l.target}</td><td>${l.time}</td></tr>` + body.innerHTML;
+                });
+            });
+        }
+
+        // --- CORE FUNCTIONS ---
+        onChildAdded(postsRef, (snap) => {
             const img = document.createElement('img');
-            img.src = snapshot.val().image;
+            img.src = snap.val().image;
             img.className = 'post-image';
-            img.id = `thumb-${snapshot.key}`;
-            img.onclick = () => openPreview(snapshot.val().image, snapshot.key);
+            img.id = `thumb-${snap.key}`;
+            img.onclick = () => openPreview(snap.val().image, snap.key);
             document.getElementById('feed').appendChild(img);
         });
 
         window.handleRightClick = (e) => {
             e.preventDefault();
             if (!currentUser || !['Lord', 'Maestro'].includes(currentUser.rank)) return;
-            if (confirm("Delete this image and all comments?")) {
+            if (confirm("Erase image and all comments?")) {
+                logAction("DELETED IMAGE", currentPostId);
                 remove(ref(db, `posts/${currentPostId}`));
                 remove(ref(db, `comments/${currentPostId}`));
                 document.getElementById(`thumb-${currentPostId}`).remove();
@@ -203,59 +230,47 @@
 
         function openPreview(url, id) {
             currentPostId = id;
-            const previewImg = document.getElementById('upscaled-image');
-            previewImg.src = url;
-            previewImg.style.display = 'block';
+            document.getElementById('upscaled-image').src = url;
+            document.getElementById('upscaled-image').style.display = 'block';
             document.getElementById('comment-section').style.display = 'flex';
             const list = document.getElementById('comment-list');
             list.innerHTML = '';
-
             if (currentCommentRef) off(currentCommentRef);
             currentCommentRef = ref(db, `comments/${id}`);
             onChildAdded(currentCommentRef, (snap) => {
                 const c = snap.val();
                 const div = document.createElement('div');
                 div.className = 'comment-item';
-                // Formatting based on logged-in status
-                if (c.rank) {
-                    div.innerHTML = `<b>> ${c.display_name}, ${c.rank} of the Ring:</b> ${c.text}`;
-                } else {
-                    div.innerText = `> ${c.text}`;
-                }
-                
+                div.innerHTML = c.rank ? `<b>> ${c.display_name}, ${c.rank} of the Ring:</b> ${c.text}` : `> ${c.text}`;
                 div.onclick = () => {
                     if (currentUser && ['Lord', 'Maestro'].includes(currentUser.rank)) {
-                        if (confirm("Delete comment?")) remove(ref(db, `comments/${id}/${snap.key}`));
+                        if (confirm("Erase comment?")) {
+                            logAction("DELETED COMMENT", c.text.substring(0,20));
+                            remove(ref(db, `comments/${id}/${snap.key}`));
+                            div.remove();
+                        }
                     }
                 };
                 list.prepend(div);
             });
         }
 
-        // --- POSTING ---
         window.postReply = () => {
             const text = document.getElementById('replyInput').value;
             if (!text || !currentPostId) return;
-            const payload = { text: text, timestamp: Date.now() };
-            if (currentUser) {
-                payload.display_name = currentUser.display_name;
-                payload.rank = currentUser.rank;
-            }
-            push(ref(db, `comments/${currentPostId}`), payload);
+            const p = { text, timestamp: Date.now() };
+            if (currentUser) { p.display_name = currentUser.display_name; p.rank = currentUser.rank; }
+            push(ref(db, `comments/${currentPostId}`), p);
             document.getElementById('replyInput').value = '';
         };
 
-        window.postImage = () => {
+        document.getElementById('postBtn').onclick = () => {
             const file = document.getElementById('imageInput').files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = (e) => {
-                push(postsRef, { image: e.target.result, timestamp: Date.now() });
-            };
+            reader.onload = (e) => push(postsRef, { image: e.target.result, timestamp: Date.now() });
             reader.readAsDataURL(file);
         };
-
-        document.getElementById('postBtn').onclick = window.postImage;
         document.getElementById('replyBtn').onclick = window.postReply;
     </script>
 </body>
