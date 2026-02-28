@@ -5,30 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Ring</title>
     <link rel="icon" type="image/png" href="The_Ring_Icon.png">
+    
     <style>
-        /* Existing styles maintained for UI consistency */
         body { margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; background: #fff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         .header { width: 100%; background: white; padding-top: 20px; z-index: 100; text-align: center; flex-shrink: 0; }
         h1 { margin: 0; font-size: 2.5rem; font-weight: 900; letter-spacing: 5px; }
         .black-line { width: 90%; height: 6px; background: black; margin: 15px auto 0; }
+
         .main-container { display: flex; flex-grow: 1; overflow: hidden; width: 100%; }
-        #feed { width: 400px; display: flex; flex-direction: column; align-items: flex-start; overflow-y: auto; padding: 20px 20px 100px 5%; gap: 30px; border-right: 2px solid #eee; }
-        .post-image { width: 300px; height: 300px; object-fit: cover; border: 3px solid #000; cursor: pointer; flex-shrink: 0; }
+        #feed { width: 400px; display: flex; flex-direction: column; align-items: flex-start; overflow-y: auto; padding: 20px 20px 150px 5%; gap: 30px; border-right: 2px solid #eee; scroll-behavior: smooth; }
+        .post-image { width: 300px; height: 300px; object-fit: cover; border: 3px solid #000; cursor: pointer; flex-shrink: 0; background: #f9f9f9; }
         #sentinel { width: 100%; height: 50px; flex-shrink: 0; }
+
         #preview-area { flex-grow: 1; display: flex; padding: 20px; gap: 20px; background: #fafafa; overflow: hidden; position: relative; }
         #upscaled-image { max-width: 65%; max-height: 80vh; object-fit: contain; border: 5px solid black; background: white; display: none; }
+        
         #comment-section { flex-grow: 1; display: none; flex-direction: column; max-width: 30%; border-left: 2px solid black; padding-left: 15px; }
-        #comment-list { flex-grow: 1; overflow-y: auto; margin-top: 10px; font-size: 0.8rem; }
-        .comment-item { padding: 8px; border-bottom: 1px solid #ddd; cursor: help; }
+        #comment-list { flex-grow: 1; overflow-y: auto; margin-top: 10px; font-size: 0.85rem; }
+        .comment-item { padding: 8px; border-bottom: 1px solid #ddd; word-wrap: break-word; }
+        
         .controls { position: fixed; bottom: 0; left: 0; width: 100%; background: white; padding: 20px; border-top: 3px solid black; display: flex; justify-content: center; gap: 20px; z-index: 1000; }
-        .post-btn { background: black; color: white; border: none; padding: 12px 40px; font-weight: bold; cursor: pointer; font-family: inherit; }
-        #auth-btn { position: fixed; bottom: 20px; right: 20px; background: black; color: white; border: none; padding: 10px 20px; font-size: 12px; cursor: pointer; z-index: 2000; }
-        #admin-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 4px solid black; padding: 20px; z-index: 3000; width: 650px; max-height: 85vh; overflow-y: auto; box-shadow: 15px 15px 0px #000; }
-        .input-box { padding: 5px; border: 2px solid black; font-family: inherit; margin-bottom: 10px; }
-        .admin-tab-btn { background: #eee; border: 1px solid black; padding: 5px 10px; cursor: pointer; margin-right: 5px; }
-        .active-tab { background: black; color: white; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.75rem; margin-top: 10px; }
+        .post-btn { background: black; color: white; border: none; padding: 12px 40px; font-weight: bold; cursor: pointer; font-family: inherit; transition: 0.2s; }
+        .post-btn:disabled { background: #666; cursor: not-allowed; }
+        
+        #auth-btn { position: fixed; bottom: 20px; right: 20px; background: black; color: white; border: none; padding: 10px 20px; font-size: 12px; cursor: pointer; z-index: 2000; font-weight: bold; }
+        
+        #admin-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 4px solid black; padding: 20px; z-index: 3000; width: 700px; max-height: 85vh; overflow-y: auto; box-shadow: 15px 15px 0px #000; }
+        .input-box { padding: 8px; border: 2px solid black; font-family: inherit; margin-bottom: 10px; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 0.75rem; margin-top: 15px; }
         th, td { border: 1px solid black; padding: 8px; text-align: left; }
+        .admin-tab-btn { background: #eee; border: 1px solid black; padding: 8px 15px; cursor: pointer; margin-right: 5px; font-weight: bold; }
+        .active-tab { background: black; color: white; }
     </style>
 </head>
 <body>
@@ -39,13 +47,15 @@
     </div>
 
     <div class="main-container">
-        <div id="feed"><div id="sentinel"></div></div>
+        <div id="feed">
+            <div id="sentinel"></div>
+        </div>
         <div id="preview-area">
-            <img id="upscaled-image" src="" alt="Selected">
+            <img id="upscaled-image" src="" alt="View" oncontextmenu="handleBigImageRightClick(event)">
             <div id="comment-section">
                 <div id="reply-ui">
                     <input type="text" id="replyInput" placeholder="ENTER REPLY..." class="input-box" style="width:85%;">
-                    <button class="post-btn" id="replyBtn" style="padding: 5px; width:95%; font-size: 0.7rem;">REPLY</button>
+                    <button class="post-btn" id="replyBtn" style="padding: 8px; width:95%; font-size: 0.75rem;">REPLY</button>
                 </div>
                 <div id="comment-list"></div>
             </div>
@@ -54,45 +64,46 @@
 
     <div class="controls">
         <input type="file" id="imageInput" accept="image/*">
-        <button class="post-btn" id="postBtn" onclick="window.postImage()">POST IMAGE</button>
+        <button class="post-btn" id="postBtn" onclick="window.handlePostClick()">POST IMAGE</button>
     </div>
 
-    <button id="auth-btn" onclick="handleAuthClick()">SIGN IN</button>
+    <button id="auth-btn" onclick="window.toggleModal()">SIGN IN</button>
 
     <div id="admin-modal">
         <div id="login-form">
             <h3>SIGN IN</h3>
             <input type="text" id="adminUser" placeholder="Username" class="input-box"><br>
             <input type="password" id="adminPass" placeholder="Password" class="input-box"><br>
-            <button onclick="attemptLogin()" class="post-btn">LOGIN</button>
-            <button onclick="toggleModal()" style="border:none; background:none; cursor:pointer; text-decoration:underline; margin-left:10px;">Cancel</button>
+            <button onclick="window.attemptLogin()" class="post-btn">LOGIN</button>
+            <button onclick="window.toggleModal()" style="border:none; background:none; cursor:pointer; text-decoration:underline; margin-left:10px;">Cancel</button>
         </div>
 
         <div id="admin-tools" style="display:none;">
-            <div style="display:flex; justify-content: space-between; align-items: center; border-bottom: 2px solid black; padding-bottom: 10px;">
+            <div style="display:flex; justify-content: space-between; align-items: center; border-bottom: 3px solid black; padding-bottom: 15px;">
                 <h3 id="user-welcome" style="margin:0;"></h3>
                 <div>
-                    <button onclick="toggleModal()" style="border:2px solid black; padding:5px; cursor:pointer; font-weight:bold;">COLLAPSE INFO</button>
-                    <button onclick="logout()" style="background:red; color:white; border:none; padding:5px; cursor:pointer;">LOGOUT</button>
+                    <button onclick="window.toggleModal()" style="border:2px solid black; padding:5px; cursor:pointer; font-weight:bold;">COLLAPSE</button>
+                    <button onclick="window.logout()" style="background:red; color:white; border:none; padding:5px; cursor:pointer; margin-left:10px;">LOGOUT</button>
                 </div>
             </div>
             
             <div id="lord-tabs" style="display:none; margin:15px 0;">
-                <button class="admin-tab-btn active-tab" id="btn-acc" onclick="showTab('accounts')">Accounts</button>
-                <button class="admin-tab-btn" id="btn-bans" onclick="showTab('bans')">Banned IDs</button>
+                <button class="admin-tab-btn active-tab" id="btn-acc" onclick="window.showTab('accounts')">Accounts</button>
+                <button class="admin-tab-btn" id="btn-bans" onclick="window.showTab('bans')">Banned IDs</button>
             </div>
 
             <div id="tab-accounts" style="display:none;">
-                <h4>STUDENT DIRECTORY</h4>
+                <div style="background:#f0f0f0; padding:15px; border:2px dashed black; margin-bottom:20px;">
+                    <h4 style="margin-top:0;">REGISTER NEW ACCOUNT</h4>
+                    <input type="text" id="regDisp" placeholder="Display Name" class="input-box" style="width:130px;">
+                    <input type="text" id="regUser" placeholder="Username" class="input-box" style="width:130px;">
+                    <input type="text" id="regPass" placeholder="Password" class="input-box" style="width:130px;">
+                    <input type="text" id="regRank" placeholder="Rank" class="input-box" style="width:100px;">
+                    <button onclick="window.registerAccount()" class="post-btn" style="padding:8px 15px;">CREATE</button>
+                </div>
+                <h4>USER DIRECTORY</h4>
                 <table>
-                    <thead>
-                        <tr>
-                            <th>Display Name</th>
-                            <th>Username</th>
-                            <th>Password</th>
-                            <th>Rank</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th>Display Name</th><th>Username</th><th>Password</th><th>Rank</th><th>Action</th></tr></thead>
                     <tbody id="acc-body"></tbody>
                 </table>
             </div>
@@ -102,10 +113,10 @@
                 <table><thead><tr><th>Fingerprint ID</th><th>Action</th></tr></thead><tbody id="ban-body"></tbody></table>
             </div>
 
-            <div id="student-view" style="display:none; margin-top:10px;">
-                <p>Status: Verified Member.</p>
+            <div id="student-view" style="display:none; margin-top:15px;">
+                <p><i>Membership active.</i></p>
                 <input type="password" id="changePass" placeholder="New Password" class="input-box"><br>
-                <button onclick="updatePass()" class="post-btn" style="padding:5px;">Update Password</button>
+                <button onclick="window.updateOwnPass()" class="post-btn" style="padding:8px;">Update My Password</button>
             </div>
         </div>
     </div>
@@ -132,9 +143,10 @@
         let currentCommentRef = null;
         let lastTimestamp = null;
         let isLoading = false;
-        const myFingerprint = btoa(navigator.userAgent).substring(0, 12);
+        let cooldownTime = 0;
+        const myFingerprint = btoa(navigator.userAgent).substring(0, 16);
 
-        // --- FEED LOGIC ---
+        // --- FEED & INFINITE SCROLL ---
         async function loadPosts() {
             if (isLoading) return;
             isLoading = true;
@@ -147,7 +159,7 @@
                 const batch = [];
                 snap.forEach(child => { batch.push({ key: child.key, ...child.val() }); });
                 batch.reverse().forEach(post => { renderPost(post); lastTimestamp = post.timestamp; });
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("Load error:", e); }
             isLoading = false;
         }
 
@@ -160,7 +172,7 @@
             img.onclick = () => openPreview(post.image, post.key);
             img.oncontextmenu = (e) => {
                 e.preventDefault();
-                if (currentUser?.rank === 'Lord' && confirm(`Ban device ID ${post.posterId}?`)) set(ref(db, `bans/${post.posterId}`), true);
+                if (currentUser?.rank === 'Lord' && confirm(`Ban device ${post.posterId}?`)) set(ref(db, `bans/${post.posterId}`), true);
             };
             document.getElementById('feed').appendChild(img);
         }
@@ -168,7 +180,43 @@
         const observer = new IntersectionObserver(ent => { if (ent[0].isIntersecting) loadPosts(); }, { threshold: 0.1 });
         observer.observe(document.getElementById('sentinel'));
 
-        // --- UPDATED COMMENT LOGIC (Reads Display Name & Rank) ---
+        // --- POSTING & DUPLICATES ---
+        window.handlePostClick = async () => {
+            const banCheck = await get(ref(db, `bans/${myFingerprint}`));
+            if (banCheck.exists()) return alert("Your ID is banned from posting.");
+            
+            const file = document.getElementById('imageInput').files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const imgData = e.target.result;
+                
+                // Duplicate check (checks last 100 posts)
+                const checkSnap = await get(query(ref(db, 'posts'), limitToLast(100)));
+                let isDup = false;
+                checkSnap.forEach(c => { if(c.val().image === imgData) isDup = true; });
+                if(isDup) return alert("Error: Image already exists in The Ring.");
+
+                await set(push(ref(db, 'posts')), { image: imgData, timestamp: Date.now(), posterId: myFingerprint });
+                startCooldown();
+                location.reload();
+            };
+            reader.readAsDataURL(file);
+        };
+
+        function startCooldown() {
+            cooldownTime = 120;
+            const btn = document.getElementById('postBtn');
+            btn.disabled = true;
+            const timer = setInterval(() => {
+                cooldownTime--;
+                btn.innerText = `WAIT [${cooldownTime}s]`;
+                if (cooldownTime <= 0) { clearInterval(timer); btn.disabled = false; btn.innerText = "POST IMAGE"; }
+            }, 1000);
+        }
+
+        // --- COMMENTS ---
         function openPreview(url, id) {
             currentPostId = id;
             const img = document.getElementById('upscaled-image');
@@ -184,9 +232,9 @@
                 const c = snap.val();
                 const div = document.createElement('div');
                 div.className = 'comment-item';
-                // Show Rank if available, otherwise just Name
-                const attribution = c.rank ? `${c.display_name} (${c.rank})` : (c.display_name || 'Guest');
-                div.innerHTML = `<b>${attribution}:</b> ${c.text}`;
+                let attr = "";
+                if (c.display_name) attr = c.rank ? `${c.display_name}, ${c.rank} of the Ring` : c.display_name;
+                div.innerHTML = attr ? `<b>${attr}:</b> ${c.text}` : `${c.text}`;
                 div.onclick = () => { if(['Lord','Maestro','Docente'].includes(currentUser?.rank)) remove(ref(db, `comments/${id}/${snap.key}`)); };
                 list.prepend(div);
             });
@@ -196,34 +244,32 @@
             const text = document.getElementById('replyInput').value;
             if (!text || !currentPostId) return;
             push(ref(db, `comments/${currentPostId}`), {
-                text, 
-                display_name: currentUser ? currentUser.display_name : 'Guest',
-                rank: currentUser ? currentUser.rank : '', // Capture rank here
-                timestamp: Date.now()
+                text, display_name: currentUser ? currentUser.display_name : '', rank: currentUser ? currentUser.rank : '', timestamp: Date.now()
             });
             document.getElementById('replyInput').value = '';
         };
 
-        // --- UPDATED LORD TAB LOGIC (Correct Data Mapping) ---
+        // --- LORD ADMIN SUITE ---
         window.showTab = (tab) => {
             document.getElementById('tab-accounts').style.display = tab === 'accounts' ? 'block' : 'none';
             document.getElementById('tab-bans').style.display = tab === 'bans' ? 'block' : 'none';
-            
-            document.getElementById('btn-acc').classList.toggle('active-tab', tab === 'accounts');
-            document.getElementById('btn-bans').classList.toggle('active-tab', tab === 'bans');
+            document.getElementById('btn-acc').className = tab === 'accounts' ? 'admin-tab-btn active-tab' : 'admin-tab-btn';
+            document.getElementById('btn-bans').className = tab === 'bans' ? 'admin-tab-btn active-tab' : 'admin-tab-btn';
 
             if (tab === 'accounts') {
                 onValue(ref(db, 'users'), snap => {
-                    const body = document.getElementById('acc-body'); 
-                    body.innerHTML = '';
+                    const body = document.getElementById('acc-body'); body.innerHTML = '';
                     snap.forEach(child => {
-                        const username = child.key; // Folder name
-                        const data = child.val();   // Folder contents
+                        const u = child.key; const d = child.val();
                         body.innerHTML += `<tr>
-                            <td>${data.display_name || '-'}</td>
-                            <td>${username}</td>
-                            <td>${data.password || '-'}</td>
-                            <td>${data.rank || '-'}</td>
+                            <td><input type="text" id="ed-disp-${u}" value="${d.display_name||''}" style="width:100px;"></td>
+                            <td>${u}</td>
+                            <td><input type="text" id="ed-pass-${u}" value="${d.password||''}" style="width:100px;"></td>
+                            <td><input type="text" id="ed-rank-${u}" value="${d.rank||''}" style="width:100px;"></td>
+                            <td>
+                                <button onclick="window.saveEdit('${u}')">SAVE</button>
+                                <button onclick="window.delAcc('${u}')" style="color:red;">X</button>
+                            </td>
                         </tr>`;
                     });
                 });
@@ -236,10 +282,25 @@
             }
         };
 
+        window.registerAccount = async () => {
+            const d = document.getElementById('regDisp').value, u = document.getElementById('regUser').value, p = document.getElementById('regPass').value, r = document.getElementById('regRank').value;
+            if(!u || !p) return alert("Fill required fields.");
+            await set(ref(db, `users/${u}`), { display_name: d, password: p, rank: r });
+            alert("Registered.");
+        };
+
+        window.saveEdit = async (u) => {
+            const d = document.getElementById(`ed-disp-${u}`).value, p = document.getElementById(`ed-pass-${u}`).value, r = document.getElementById(`ed-rank-${u}`).value;
+            await set(ref(db, `users/${u}`), { display_name: d, password: p, rank: r });
+            alert("Saved.");
+        };
+
+        window.delAcc = (u) => { if(confirm("Delete?")) remove(ref(db, `users/${u}`)); };
+        window.unban = (id) => remove(ref(db, `bans/${id}`));
+
         // --- AUTH & MISC ---
         window.attemptLogin = async () => {
-            const u = document.getElementById('adminUser').value;
-            const p = document.getElementById('adminPass').value;
+            const u = document.getElementById('adminUser').value, p = document.getElementById('adminPass').value;
             const snap = await get(ref(db, `users/${u}`));
             if (snap.exists() && snap.val().password === p) {
                 currentUser = snap.val(); currentUser.username = u;
@@ -247,34 +308,25 @@
                 document.getElementById('admin-tools').style.display = 'block';
                 document.getElementById('user-welcome').innerText = `${currentUser.display_name} [${currentUser.rank}]`;
                 document.getElementById('auth-btn').innerText = "ACCOUNT INFO";
-                if (currentUser.rank === 'Lord') {
-                    document.getElementById('lord-tabs').style.display = 'block';
-                    showTab('accounts');
-                } else { document.getElementById('student-view').style.display = 'block'; }
-            } else alert("Credentials Mismatch.");
+                if (currentUser.rank === 'Lord') { document.getElementById('lord-tabs').style.display = 'block'; window.showTab('accounts'); }
+                else { document.getElementById('student-view').style.display = 'block'; }
+            } else alert("Denied.");
         };
 
-        window.unban = (id) => remove(ref(db, `bans/${id}`));
-        window.postImage = async () => { 
-            const file = document.getElementById('imageInput').files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                await set(push(ref(db, 'posts')), { image: e.target.result, timestamp: Date.now(), posterId: myFingerprint });
-                location.reload(); 
-            };
-            reader.readAsDataURL(file);
-        };
         window.toggleModal = () => { 
-            const m = document.getElementById('admin-modal');
-            m.style.display = m.style.display === 'block' ? 'none' : 'block';
-            if (currentUser) {
-                document.getElementById('auth-btn').innerText = m.style.display === 'block' ? "COLLAPSE INFO" : "ACCOUNT INFO";
-            }
+            const m = document.getElementById('admin-modal'); m.style.display = m.style.display === 'block' ? 'none' : 'block';
+            if (currentUser) document.getElementById('auth-btn').innerText = m.style.display === 'block' ? "COLLAPSE INFO" : "ACCOUNT INFO";
         };
-        window.handleAuthClick = () => window.toggleModal();
         window.logout = () => location.reload();
         document.getElementById('replyBtn').onclick = window.postReply;
+        window.handleBigImageRightClick = (e) => {
+            e.preventDefault();
+            if (['Lord','Maestro'].includes(currentUser?.rank) && confirm("Erase post?")) {
+                remove(ref(db, `posts/${currentPostId}`));
+                remove(ref(db, `comments/${currentPostId}`));
+                location.reload();
+            }
+        };
 
     </script>
 </body>
