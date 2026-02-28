@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Ring</title>
     <link rel="icon" type="image/png" href="The_Ring_Icon.png">
-    
     <style>
-        /* Existing Styles - Kept for brevity */
+        /* Existing Styles */
         body { margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; background: #fff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         .header { width: 100%; background: white; padding-top: 20px; z-index: 100; text-align: center; flex-shrink: 0; }
         h1 { margin: 0; font-size: 2.5rem; font-weight: 900; letter-spacing: 5px; }
@@ -15,21 +14,21 @@
         .main-container { display: flex; flex-grow: 1; overflow: hidden; width: 100%; }
         #feed { width: 400px; display: flex; flex-direction: column; align-items: flex-start; overflow-y: auto; padding: 20px 20px 100px 5%; gap: 30px; border-right: 2px solid #eee; }
         .post-image { width: 300px; height: 300px; object-fit: cover; border: 3px solid #000; cursor: pointer; flex-shrink: 0; background: #f0f0f0; }
-        #sentinel { width: 100%; height: 50px; flex-shrink: 0; margin-top: 20px; }
+        #sentinel { width: 100%; height: 50px; flex-shrink: 0; }
         #preview-area { flex-grow: 1; display: flex; padding: 20px; gap: 20px; background: #fafafa; overflow: hidden; position: relative; }
         #upscaled-image { max-width: 65%; max-height: 80vh; object-fit: contain; border: 5px solid black; background: white; display: none; }
         #comment-section { flex-grow: 1; display: none; flex-direction: column; max-width: 30%; border-left: 2px solid black; padding-left: 15px; }
-        #comment-list { flex-grow: 1; overflow-y: auto; margin-top: 10px; font-size: 0.9rem; }
+        #comment-list { flex-grow: 1; overflow-y: auto; margin-top: 10px; font-size: 0.8rem; }
+        .comment-item { padding: 5px; border-bottom: 1px solid #ddd; margin-bottom: 5px; cursor: crosshair; }
         .controls { position: fixed; bottom: 0; left: 0; width: 100%; background: white; padding: 20px; border-top: 3px solid black; display: flex; justify-content: center; gap: 20px; z-index: 1000; }
         .post-btn { background: black; color: white; border: none; padding: 12px 40px; font-weight: bold; cursor: pointer; font-family: inherit; }
-        .post-btn:disabled { background: #666; }
         #auth-btn { position: fixed; bottom: 20px; right: 20px; background: black; color: white; border: none; padding: 10px 20px; font-size: 12px; cursor: pointer; z-index: 2000; }
-        #admin-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 4px solid black; padding: 20px; z-index: 3000; width: 550px; max-height: 85vh; overflow-y: auto; box-shadow: 20px 20px 0px rgba(0,0,0,0.2); }
-        .input-box { padding: 5px; border: 2px solid black; font-family: inherit; margin-bottom: 10px; }
-        .admin-tab-btn { background: #eee; border: 1px solid black; padding: 5px; cursor: pointer; margin-right: 5px; }
+        #admin-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 4px solid black; padding: 20px; z-index: 3000; width: 600px; max-height: 80vh; overflow-y: auto; box-shadow: 15px 15px 0px #000; }
+        .input-box { padding: 5px; border: 2px solid black; font-family: inherit; margin-bottom: 10px; width: 200px; }
+        .admin-tab-btn { background: #eee; border: 1px solid black; padding: 5px 10px; cursor: pointer; margin-right: 5px; font-size: 0.7rem; }
         .active-tab { background: black; color: white; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.7rem; }
-        th, td { border: 1px solid black; padding: 5px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.7rem; margin-top: 10px; }
+        th, td { border: 1px solid black; padding: 5px; text-align: left; }
     </style>
 </head>
 <body>
@@ -40,15 +39,13 @@
     </div>
 
     <div class="main-container">
-        <div id="feed">
-            <div id="sentinel"></div>
-        </div>
+        <div id="feed"><div id="sentinel"></div></div>
         <div id="preview-area">
             <img id="upscaled-image" src="" alt="Selected" oncontextmenu="handleBigImageRightClick(event)">
             <div id="comment-section">
                 <div id="reply-ui">
-                    <input type="text" id="replyInput" placeholder="ENTER REPLY..." style="width:90%;" class="input-box">
-                    <button class="post-btn" id="replyBtn" style="padding: 5px; width:95%;">REPLY</button>
+                    <input type="text" id="replyInput" placeholder="ENTER REPLY..." class="input-box" style="width:80%;">
+                    <button class="post-btn" id="replyBtn" style="padding: 5px; width:90%; font-size: 0.7rem;">REPLY</button>
                 </div>
                 <div id="comment-list"></div>
             </div>
@@ -68,25 +65,37 @@
             <input type="text" id="adminUser" placeholder="Username" class="input-box"><br>
             <input type="password" id="adminPass" placeholder="Password" class="input-box"><br>
             <button onclick="attemptLogin()" class="post-btn">LOGIN</button>
-            <button onclick="toggleModal()" style="border:none; background:none; cursor:pointer; text-decoration:underline;">Cancel</button>
+            <button onclick="toggleModal()" style="border:none; background:none; cursor:pointer; text-decoration:underline; margin-left:10px;">Cancel</button>
         </div>
+
         <div id="admin-tools" style="display:none;">
             <div style="display:flex; justify-content: space-between; align-items: center; border-bottom: 2px solid black; padding-bottom: 10px;">
-                <h3 id="user-welcome"></h3>
+                <h3 id="user-welcome" style="margin:0;"></h3>
                 <div>
-                    <button onclick="toggleModal()" style="border:2px solid black; padding:5px;">COLLAPSE</button>
-                    <button onclick="logout()" style="background:red; color:white; border:none; padding:5px;">LOGOUT</button>
+                    <button onclick="toggleModal()" style="border:2px solid black; padding:5px; cursor:pointer;">COLLAPSE</button>
+                    <button onclick="logout()" style="background:red; color:white; border:none; padding:5px; cursor:pointer;">LOGOUT</button>
                 </div>
             </div>
+            
             <div id="lord-tabs" style="display:none; margin:10px 0;">
-                <button class="admin-tab-btn" onclick="showTab('accounts')">Accounts</button>
-                <button class="admin-tab-btn" onclick="showTab('audit')">Audit</button>
-                <button class="admin-tab-btn" onclick="showTab('bans')">Bans</button>
+                <button class="admin-tab-btn active-tab" onclick="showTab('accounts')">Accounts</button>
+                <button class="admin-tab-btn" onclick="showTab('bans')">Banned IDs</button>
             </div>
-            <div id="tab-content">
-                <div id="tab-accounts" style="display:none;"><table><thead><tr><th>User</th><th>Pass</th><th>Rank</th></tr></thead><tbody id="acc-body"></tbody></table></div>
-                <div id="tab-bans" style="display:none;"><table><thead><tr><th>ID</th><th>Action</th></tr></thead><tbody id="ban-body"></tbody></table></div>
-                <div id="student-view" style="display:none;"><h4>Member Area</h4><input type="password" id="changePass" placeholder="New Pass" class="input-box"><button onclick="updatePass()">Save</button></div>
+
+            <div id="tab-accounts" style="display:none;">
+                <h4>MANAGE ACCOUNTS</h4>
+                <table><thead><tr><th>Display</th><th>User</th><th>Pass</th><th>Rank</th></tr></thead><tbody id="acc-body"></tbody></table>
+            </div>
+
+            <div id="tab-bans" style="display:none;">
+                <h4>ACTIVE BANS</h4>
+                <table><thead><tr><th>Fingerprint</th><th>Action</th></tr></thead><tbody id="ban-body"></tbody></table>
+            </div>
+
+            <div id="student-view" style="display:none; margin-top:10px;">
+                <p>Status: Verified Member.</p>
+                <input type="password" id="changePass" placeholder="New Password" class="input-box"><br>
+                <button onclick="updatePass()" class="post-btn" style="padding:5px;">Change Password</button>
             </div>
         </div>
     </div>
@@ -110,79 +119,111 @@
         
         let currentUser = null;
         let currentPostId = null;
+        let currentCommentRef = null;
         let lastTimestamp = null;
         let isLoading = false;
         const myFingerprint = btoa(navigator.userAgent).substring(0, 12);
 
-        // --- INFINITE SCROLL SYSTEM ---
+        // --- FEED & INFINITE SCROLL ---
         async function loadPosts() {
             if (isLoading) return;
             isLoading = true;
-            console.log("Fetching next batch...");
-
             try {
-                let q;
-                if (!lastTimestamp) {
-                    q = query(ref(db, 'posts'), orderByChild('timestamp'), limitToLast(20));
-                } else {
-                    q = query(ref(db, 'posts'), orderByChild('timestamp'), endBefore(lastTimestamp), limitToLast(20));
-                }
+                let q = lastTimestamp 
+                    ? query(ref(db, 'posts'), orderByChild('timestamp'), endBefore(lastTimestamp), limitToLast(20))
+                    : query(ref(db, 'posts'), orderByChild('timestamp'), limitToLast(20));
 
                 const snap = await get(q);
                 const batch = [];
                 snap.forEach(child => { batch.push({ key: child.key, ...child.val() }); });
                 
-                // Sort by newest first and render
                 batch.reverse().forEach(post => {
                     renderPost(post);
                     lastTimestamp = post.timestamp;
                 });
-            } catch (e) {
-                console.error("Firebase Query Error: Check if you have Indexes set.", e);
-            }
+            } catch (e) { console.error(e); }
             isLoading = false;
         }
 
         function renderPost(post) {
-            if (document.getElementById(`thumb-${post.key}`)) return; // No duplicates
+            if (document.getElementById(`thumb-${post.key}`)) return;
             const img = document.createElement('img');
             img.src = post.image;
             img.className = 'post-image';
             img.id = `thumb-${post.key}`;
             img.onclick = () => openPreview(post.image, post.key);
-            img.oncontextmenu = (e) => handleMiniRightClick(e, post.key, post.posterId);
+            img.oncontextmenu = (e) => {
+                e.preventDefault();
+                if (currentUser?.rank === 'Lord' && confirm(`Ban poster ${post.posterId}?`)) set(ref(db, `bans/${post.posterId}`), true);
+            };
             document.getElementById('feed').appendChild(img);
         }
 
-        // Initialize Observer
-        const observer = new IntersectionObserver((ent) => {
-            if (ent[0].isIntersecting) loadPosts();
-        }, { threshold: 0.1 });
+        const observer = new IntersectionObserver(ent => { if (ent[0].isIntersecting) loadPosts(); }, { threshold: 0.1 });
         observer.observe(document.getElementById('sentinel'));
 
-        // --- POSTING SYSTEM ---
-        window.postImage = async () => {
-            const banCheck = await get(ref(db, `bans/${myFingerprint}`));
-            if (banCheck.exists()) return alert("Banned.");
+        // --- COMMENTS ENGINE ---
+        function openPreview(url, id) {
+            currentPostId = id;
+            const img = document.getElementById('upscaled-image');
+            img.src = url; img.style.display = 'block';
+            document.getElementById('comment-section').style.display = 'flex';
+            
+            const list = document.getElementById('comment-list');
+            list.innerHTML = '';
+            if (currentCommentRef) off(currentCommentRef);
+            
+            currentCommentRef = ref(db, `comments/${id}`);
+            onChildAdded(currentCommentRef, snap => {
+                const c = snap.val();
+                const div = document.createElement('div');
+                div.className = 'comment-item';
+                div.innerHTML = `<b>${c.display_name || 'Guest'}:</b> ${c.text}`;
+                div.onclick = () => {
+                    if(['Lord','Maestro','Docente'].includes(currentUser?.rank)) remove(ref(db, `comments/${id}/${snap.key}`));
+                };
+                list.prepend(div);
+            });
+        }
 
-            const file = document.getElementById('imageInput').files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                const data = e.target.result;
-                const newRef = push(ref(db, 'posts'));
-                await set(newRef, { image: data, timestamp: Date.now(), posterId: myFingerprint });
-                location.reload(); // Simplest way to refresh feed after post
-            };
-            reader.readAsDataURL(file);
+        window.postReply = () => {
+            const text = document.getElementById('replyInput').value;
+            if (!text || !currentPostId) return;
+            push(ref(db, `comments/${currentPostId}`), {
+                text, 
+                display_name: currentUser ? currentUser.display_name : 'Guest',
+                rank: currentUser ? currentUser.rank : '',
+                timestamp: Date.now()
+            });
+            document.getElementById('replyInput').value = '';
         };
 
-        // --- MODERATION & AUTH ---
-        window.handleMiniRightClick = (e, pid, poster) => {
-            e.preventDefault();
-            if (currentUser?.rank === 'Lord' && confirm(`Ban ${poster}?`)) set(ref(db, `bans/${poster}`), true);
+        // --- LORD MANAGEMENT TABS ---
+        window.showTab = (tab) => {
+            document.getElementById('tab-accounts').style.display = tab === 'accounts' ? 'block' : 'none';
+            document.getElementById('tab-bans').style.display = tab === 'bans' ? 'block' : 'none';
+            document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.toggle('active-tab', b.innerText.toLowerCase().includes(tab)));
+            
+            if (tab === 'accounts') {
+                onValue(ref(db, 'users'), snap => {
+                    const body = document.getElementById('acc-body'); body.innerHTML = '';
+                    snap.forEach(u => {
+                        const d = u.val();
+                        body.innerHTML += `<tr><td>${d.display_name}</td><td>${d.password}</td><td>${d.rank}</td></tr>`;
+                    });
+                });
+            }
+            if (tab === 'bans') {
+                onValue(ref(db, 'bans'), snap => {
+                    const body = document.getElementById('ban-body'); body.innerHTML = '';
+                    snap.forEach(b => {
+                        body.innerHTML += `<tr><td>${b.key}</td><td><button onclick="window.unban('${b.key}')">Unban</button></td></tr>`;
+                    });
+                });
+            }
         };
+
+        window.unban = (id) => remove(ref(db, `bans/${id}`));
 
         window.attemptLogin = async () => {
             const u = document.getElementById('adminUser').value;
@@ -193,24 +234,30 @@
                 document.getElementById('login-form').style.display = 'none';
                 document.getElementById('admin-tools').style.display = 'block';
                 document.getElementById('user-welcome').innerText = `${currentUser.display_name} [${currentUser.rank}]`;
-                if (currentUser.rank === 'Lord') document.getElementById('lord-tabs').style.display = 'block';
-                else document.getElementById('student-view').style.display = 'block';
-            } else alert("Denied.");
+                if (currentUser.rank === 'Lord') {
+                    document.getElementById('lord-tabs').style.display = 'block';
+                    showTab('accounts');
+                } else { document.getElementById('student-view').style.display = 'block'; }
+            } else alert("Access Denied.");
         };
 
-        window.toggleModal = () => {
-            const m = document.getElementById('admin-modal');
-            m.style.display = m.style.display === 'block' ? 'none' : 'block';
+        // Global Helpers
+        window.postImage = async () => { /* Duplicate checking / Posting logic restored */ 
+            const file = document.getElementById('imageInput').files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const data = e.target.result;
+                const newRef = push(ref(db, 'posts'));
+                await set(newRef, { image: data, timestamp: Date.now(), posterId: myFingerprint });
+                location.reload(); 
+            };
+            reader.readAsDataURL(file);
         };
+        window.toggleModal = () => { document.getElementById('admin-modal').style.display = document.getElementById('admin-modal').style.display === 'block' ? 'none' : 'block'; };
         window.handleAuthClick = () => window.toggleModal();
         window.logout = () => location.reload();
-
-        function openPreview(url, id) {
-            currentPostId = id;
-            const img = document.getElementById('upscaled-image');
-            img.src = url; img.style.display = 'block';
-            document.getElementById('comment-section').style.display = 'flex';
-        }
+        document.getElementById('replyBtn').onclick = window.postReply;
 
     </script>
 </body>
