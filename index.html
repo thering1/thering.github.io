@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Ring</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            overflow: hidden; /* Prevents the whole page from scrolling */
+        }
+
+        /* The Header Section */
+        .header {
+            width: 100%;
+            text-align: center;
+            background: white;
+            padding-top: 20px;
+            z-index: 10;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2rem;
+            letter-spacing: 2px;
+        }
+
+        .black-line {
+            width: 80%;
+            height: 4px;
+            background-color: black;
+            margin: 15px auto 0 auto;
+        }
+
+        /* The Feed Area */
+        #feed {
+            width: 100%;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column-reverse; /* Newest at bottom, pushes others up */
+            align-items: center;
+            overflow-y: auto; /* Allows scrolling */
+            padding-bottom: 100px; /* Space for the controls */
+            gap: 20px;
+        }
+
+        .post-image {
+            width: 300px; /* Standardized size */
+            height: 300px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+
+        /* The Controls at the bottom */
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            display: flex;
+            gap: 10px;
+            z-index: 20;
+        }
+
+        button {
+            padding: 8px 15px;
+            background: black;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>THE RING</h1>
+        <div class="black-line"></div>
+    </div>
+
+    <div id="feed">
+        </div>
+
+    <div class="controls">
+        <input type="file" id="imageInput" accept="image/*">
+        <button onclick="postImage()">Post</button>
+    </div>
+
+    <script>
+        const feed = document.getElementById('feed');
+        const imageInput = document.getElementById('imageInput');
+
+        // 1. Load existing posts from LocalStorage on startup
+        window.onload = () => {
+            const savedPosts = JSON.parse(localStorage.getItem('myPosts')) || [];
+            savedPosts.forEach(src => displayImage(src));
+        };
+
+        function postImage() {
+            const file = imageInput.files[0];
+            if (!file) return alert("Select an image first!");
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imageSrc = e.target.result;
+                
+                // Save to local storage
+                savePost(imageSrc);
+                
+                // Add to screen
+                displayImage(imageSrc);
+                
+                // Clear input
+                imageInput.value = "";
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function displayImage(src) {
+            const img = document.createElement('img');
+            img.src = src;
+            img.className = 'post-image';
+            feed.appendChild(img);
+            
+            // Auto-scroll to the newest image at the bottom
+            feed.scrollTop = feed.scrollHeight;
+        }
+
+        function savePost(src) {
+            const savedPosts = JSON.parse(localStorage.getItem('myPosts')) || [];
+            savedPosts.push(src);
+            localStorage.setItem('myPosts', JSON.stringify(savedPosts));
+        }
+    </script>
+</body>
+</html>
