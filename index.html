@@ -7,78 +7,96 @@
     <style>
         body {
             margin: 0;
-            font-family: sans-serif;
+            padding: 0;
+            font-family: 'Helvetica', sans-serif;
+            background-color: #ffffff;
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            height: 100vh;
-            background-color: #f0f0f0;
-            overflow: hidden; /* Prevents the whole page from scrolling */
+            overflow: hidden; /* Keeps the UI static while the feed scrolls */
         }
 
-        /* The Header Section */
+        /* 1. THE HEADER & THE LINE */
         .header {
+            position: fixed;
+            top: 0;
             width: 100%;
-            text-align: center;
-            background: white;
+            background: white; /* Matches body to 'hide' images passing under */
             padding-top: 20px;
-            z-index: 10;
+            z-index: 100;
+            text-align: center;
         }
 
         h1 {
             margin: 0;
-            font-size: 2rem;
-            letter-spacing: 2px;
+            font-size: 2.5rem;
+            font-weight: 900;
+            letter-spacing: -1px;
         }
 
         .black-line {
-            width: 80%;
-            height: 4px;
+            width: 90%;
+            height: 5px;
             background-color: black;
             margin: 15px auto 0 auto;
         }
 
-        /* The Feed Area */
+        /* 2. THE FEED (Left-aligned, Bottom-up) */
         #feed {
-            width: 100%;
             flex-grow: 1;
             display: flex;
-            flex-direction: column-reverse; /* Newest at bottom, pushes others up */
-            align-items: center;
-            overflow-y: auto; /* Allows scrolling */
-            padding-bottom: 100px; /* Space for the controls */
-            gap: 20px;
+            flex-direction: column; 
+            align-items: flex-start; /* Aligns images to the LEFT */
+            overflow-y: auto;
+            padding: 100px 5% 150px 5%; /* Top padding starts images below the line */
+            gap: 30px;
+        }
+
+        /* This pushes content to the bottom when the feed is empty */
+        .spacer {
+            flex-grow: 1;
         }
 
         .post-image {
-            width: 300px; /* Standardized size */
-            height: 300px;
+            width: 350px; /* Uniform width */
+            height: 350px; /* Uniform height */
             object-fit: cover;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            flex-shrink: 0;
+            border: 2px solid #000;
+            flex-shrink: 0; /* Prevents images from squishing */
         }
 
-        /* The Controls at the bottom */
+        /* 3. THE CONTROLS */
         .controls {
             position: fixed;
-            bottom: 20px;
-            background: white;
-            padding: 15px;
-            border-radius: 50px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-top: 1px solid #ddd;
             display: flex;
-            gap: 10px;
-            z-index: 20;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            z-index: 100;
         }
 
-        button {
-            padding: 8px 15px;
+        #imageInput {
+            font-size: 0.9rem;
+        }
+
+        .post-btn {
             background: black;
             color: white;
             border: none;
-            border-radius: 20px;
+            padding: 10px 25px;
+            font-weight: bold;
             cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .post-btn:hover {
+            background: #333;
         }
     </style>
 </head>
@@ -90,39 +108,46 @@
     </div>
 
     <div id="feed">
+        <div class="spacer"></div>
         </div>
 
     <div class="controls">
         <input type="file" id="imageInput" accept="image/*">
-        <button onclick="postImage()">Post</button>
+        <button class="post-btn" onclick="postImage()">Post</button>
     </div>
 
     <script>
         const feed = document.getElementById('feed');
         const imageInput = document.getElementById('imageInput');
 
-        // 1. Load existing posts from LocalStorage on startup
+        // Load saved images from LocalStorage
         window.onload = () => {
-            const savedPosts = JSON.parse(localStorage.getItem('myPosts')) || [];
+            const savedPosts = JSON.parse(localStorage.getItem('theRingPosts')) || [];
             savedPosts.forEach(src => displayImage(src));
         };
 
         function postImage() {
             const file = imageInput.files[0];
-            if (!file) return alert("Select an image first!");
+            if (!file) {
+                alert("Please select an image first.");
+                return;
+            }
 
             const reader = new FileReader();
             reader.onload = function(e) {
                 const imageSrc = e.target.result;
                 
-                // Save to local storage
+                // 1. Save to local storage
                 savePost(imageSrc);
                 
-                // Add to screen
+                // 2. Add to feed
                 displayImage(imageSrc);
                 
-                // Clear input
+                // 3. Reset input
                 imageInput.value = "";
+
+                // 4. Scroll to the bottom so the new post is visible
+                feed.scrollTo({ top: feed.scrollHeight, behavior: 'smooth' });
             };
             reader.readAsDataURL(file);
         }
@@ -132,15 +157,12 @@
             img.src = src;
             img.className = 'post-image';
             feed.appendChild(img);
-            
-            // Auto-scroll to the newest image at the bottom
-            feed.scrollTop = feed.scrollHeight;
         }
 
         function savePost(src) {
-            const savedPosts = JSON.parse(localStorage.getItem('myPosts')) || [];
+            const savedPosts = JSON.parse(localStorage.getItem('theRingPosts')) || [];
             savedPosts.push(src);
-            localStorage.setItem('myPosts', JSON.stringify(savedPosts));
+            localStorage.setItem('theRingPosts', JSON.stringify(savedPosts));
         }
     </script>
 </body>
