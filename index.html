@@ -5,99 +5,96 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Ring</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Helvetica', sans-serif;
-            background-color: #ffffff;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden; /* Keeps the UI static while the feed scrolls */
-        }
-
-        /* 1. THE HEADER & THE LINE */
-        .header {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            background: white; /* Matches body to 'hide' images passing under */
-            padding-top: 20px;
-            z-index: 100;
-            text-align: center;
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 2.5rem;
-            font-weight: 900;
-            letter-spacing: -1px;
-        }
-
-        .black-line {
-            width: 90%;
-            height: 5px;
-            background-color: black;
-            margin: 15px auto 0 auto;
-        }
-
-        /* 2. THE FEED (Left-aligned, Bottom-up) */
-        #feed {
-            flex-grow: 1;
-            display: flex;
+        body { 
+            margin: 0; 
+            padding: 0; 
+            font-family: 'Courier New', Courier, monospace; 
+            background-color: #ffffff; 
+            height: 100vh; 
+            display: flex; 
             flex-direction: column; 
-            align-items: flex-start; /* Aligns images to the LEFT */
-            overflow-y: auto;
-            padding: 100px 5% 150px 5%; /* Top padding starts images below the line */
-            gap: 30px;
+            overflow: hidden; 
         }
 
-        /* This pushes content to the bottom when the feed is empty */
-        .spacer {
-            flex-grow: 1;
+        /* HEADER & BLACK LINE */
+        .header { 
+            position: fixed; 
+            top: 0; 
+            width: 100%; 
+            background: white; 
+            padding-top: 20px; 
+            z-index: 100; 
+            text-align: center; 
         }
 
-        .post-image {
-            width: 350px; /* Uniform width */
-            height: 350px; /* Uniform height */
-            object-fit: cover;
-            border: 2px solid #000;
-            flex-shrink: 0; /* Prevents images from squishing */
-        }
-
-        /* 3. THE CONTROLS */
-        .controls {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 20px;
-            border-top: 1px solid #ddd;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-            z-index: 100;
-        }
-
-        #imageInput {
-            font-size: 0.9rem;
-        }
-
-        .post-btn {
-            background: black;
-            color: white;
-            border: none;
-            padding: 10px 25px;
-            font-weight: bold;
-            cursor: pointer;
+        h1 { 
+            margin: 0; 
+            font-size: 2.5rem; 
+            font-weight: 900; 
+            letter-spacing: 5px; 
             text-transform: uppercase;
         }
 
-        .post-btn:hover {
-            background: #333;
+        .black-line { 
+            width: 90%; 
+            height: 6px; 
+            background-color: black; 
+            margin: 15px auto 0 auto; 
         }
+
+        /* FEED (Left-aligned, Bottom-up) */
+        #feed { 
+            flex-grow: 1; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: flex-start; 
+            overflow-y: auto; 
+            padding: 120px 5% 180px 5%; 
+            gap: 40px; 
+        }
+
+        .spacer { flex-grow: 1; order: -1; }
+
+        .post-container {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .post-image { 
+            width: 350px; 
+            height: 350px; 
+            object-fit: cover; 
+            border: 3px solid #000; 
+            display: block;
+        }
+
+        /* CONTROLS */
+        .controls { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            width: 100%; 
+            background: white; 
+            padding: 25px; 
+            border-top: 3px solid black; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 20px; 
+            z-index: 100; 
+        }
+
+        .post-btn { 
+            background: black; 
+            color: white; 
+            border: none; 
+            padding: 12px 40px; 
+            font-weight: bold; 
+            font-family: inherit;
+            cursor: pointer; 
+        }
+
+        .post-btn:disabled { background: #ccc; }
     </style>
 </head>
 <body>
@@ -109,60 +106,82 @@
 
     <div id="feed">
         <div class="spacer"></div>
-        </div>
+    </div>
 
     <div class="controls">
         <input type="file" id="imageInput" accept="image/*">
-        <button class="post-btn" onclick="postImage()">Post</button>
+        <button class="post-btn" id="postBtn">POST</button>
     </div>
 
-    <script>
-        const feed = document.getElementById('feed');
-        const imageInput = document.getElementById('imageInput');
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // Load saved images from LocalStorage
-        window.onload = () => {
-            const savedPosts = JSON.parse(localStorage.getItem('theRingPosts')) || [];
-            savedPosts.forEach(src => displayImage(src));
+        const firebaseConfig = {
+            apiKey: "AIzaSyCHSN6HiR50_sFT7L8p0bOUVDBb3KBpJiY",
+            authDomain: "the-ring-97f20.firebaseapp.com",
+            projectId: "the-ring-97f20",
+            storageBucket: "the-ring-97f20.firebasestorage.app",
+            messagingSenderId: "254314705601",
+            appId: "1:254314705601:web:80eea55a563f7a01f95a40",
+            // UPDATED REGION URL
+            databaseURL: "https://the-ring-97f20-default-rtdb.asia-southeast1.firebasedatabase.app"
         };
 
-        function postImage() {
-            const file = imageInput.files[0];
-            if (!file) {
-                alert("Please select an image first.");
-                return;
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const postsRef = ref(db, 'posts');
+        const feed = document.getElementById('feed');
+        const btn = document.getElementById('postBtn');
+
+        // Listen for global posts
+        onChildAdded(postsRef, (snapshot) => {
+            const data = snapshot.val();
+            displayImage(data.image);
+        });
+
+        window.postImage = () => {
+            const file = document.getElementById('imageInput').files[0];
+            if (!file) return alert("Please select an image.");
+
+            if (file.size > 1048576) {
+                return alert("File too large! Keep it under 1MB.");
             }
+
+            btn.disabled = true;
+            btn.innerText = "POSTING...";
 
             const reader = new FileReader();
             reader.onload = function(e) {
-                const imageSrc = e.target.result;
-                
-                // 1. Save to local storage
-                savePost(imageSrc);
-                
-                // 2. Add to feed
-                displayImage(imageSrc);
-                
-                // 3. Reset input
-                imageInput.value = "";
+                const base64Data = e.target.result;
 
-                // 4. Scroll to the bottom so the new post is visible
-                feed.scrollTo({ top: feed.scrollHeight, behavior: 'smooth' });
+                push(postsRef, {
+                    image: base64Data,
+                    timestamp: Date.now()
+                }).then(() => {
+                    btn.disabled = false;
+                    btn.innerText = "POST";
+                    document.getElementById('imageInput').value = "";
+                });
             };
             reader.readAsDataURL(file);
-        }
+        };
 
-        function displayImage(src) {
+        document.getElementById('postBtn').onclick = window.postImage;
+
+        function displayImage(url) {
+            const container = document.createElement('div');
+            container.className = 'post-container';
             const img = document.createElement('img');
-            img.src = src;
+            img.src = url;
             img.className = 'post-image';
-            feed.appendChild(img);
-        }
-
-        function savePost(src) {
-            const savedPosts = JSON.parse(localStorage.getItem('theRingPosts')) || [];
-            savedPosts.push(src);
-            localStorage.setItem('theRingPosts', JSON.stringify(savedPosts));
+            container.appendChild(img);
+            feed.appendChild(container);
+            
+            // Forces scroll to the newest image
+            setTimeout(() => {
+                feed.scrollTop = feed.scrollHeight;
+            }, 100);
         }
     </script>
 </body>
