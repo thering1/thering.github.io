@@ -51,7 +51,7 @@
             <div id="sentinel"></div>
         </div>
         <div id="preview-area">
-            <img id="upscaled-image" src="" alt="View" oncontextmenu="handleBigImageRightClick(event)">
+            <img id="upscaled-image" src="" alt="View" oncontextmenu="window.handleBigImageRightClick(event)">
             <div id="comment-section">
                 <div id="reply-ui">
                     <input type="text" id="replyInput" placeholder="ENTER REPLY..." class="input-box" style="width:85%;">
@@ -191,8 +191,6 @@
             const reader = new FileReader();
             reader.onload = async (e) => {
                 const imgData = e.target.result;
-                
-                // Duplicate check (checks last 100 posts)
                 const checkSnap = await get(query(ref(db, 'posts'), limitToLast(100)));
                 let isDup = false;
                 checkSnap.forEach(c => { if(c.val().image === imgData) isDup = true; });
@@ -216,7 +214,7 @@
             }, 1000);
         }
 
-        // --- COMMENTS ---
+        // --- COMMENT LOGIC WITH > PROMPT ---
         function openPreview(url, id) {
             currentPostId = id;
             const img = document.getElementById('upscaled-image');
@@ -232,9 +230,18 @@
                 const c = snap.val();
                 const div = document.createElement('div');
                 div.className = 'comment-item';
-                let attr = "";
-                if (c.display_name) attr = c.rank ? `${c.display_name}, ${c.rank} of the Ring` : c.display_name;
-                div.innerHTML = attr ? `<b>${attr}:</b> ${c.text}` : `${c.text}`;
+                
+                let content = "";
+                if (c.display_name && c.display_name !== "") {
+                    // Logic: > Display Name, Rank of the Ring: Message
+                    const header = c.rank ? `${c.display_name}, ${c.rank} of the Ring` : c.display_name;
+                    content = `> <b>${header}:</b> ${c.text}`;
+                } else {
+                    // Logic: > Message (Anonymous)
+                    content = `> ${c.text}`;
+                }
+                
+                div.innerHTML = content;
                 div.onclick = () => { if(['Lord','Maestro','Docente'].includes(currentUser?.rank)) remove(ref(db, `comments/${id}/${snap.key}`)); };
                 list.prepend(div);
             });
