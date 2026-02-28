@@ -24,9 +24,10 @@
         .controls { position: fixed; bottom: 0; left: 0; width: 100%; background: white; padding: 20px; border-top: 3px solid black; display: flex; justify-content: center; gap: 20px; z-index: 1000; }
         .post-btn { background: black; color: white; border: none; padding: 12px 40px; font-weight: bold; cursor: pointer; font-family: inherit; }
         
-        /* AUTH UI */
+        /* UPDATED AUTH UI */
         #auth-btn { position: fixed; bottom: 20px; right: 20px; background: black; color: white; border: none; padding: 10px 20px; font-size: 12px; cursor: pointer; z-index: 2000; font-family: inherit; font-weight: bold; }
         #admin-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 4px solid black; padding: 20px; z-index: 3000; width: 550px; max-height: 85vh; overflow-y: auto; box-shadow: 20px 20px 0px rgba(0,0,0,0.2); }
+        
         table { width: 100%; border-collapse: collapse; font-size: 0.7rem; margin-top: 10px; }
         th, td { border: 1px solid black; padding: 5px; text-align: left; }
         .admin-tab-btn { background: #eee; border: 1px solid black; padding: 5px; cursor: pointer; margin-right: 5px; }
@@ -74,7 +75,10 @@
         <div id="admin-tools" style="display:none;">
             <div style="display:flex; justify-content: space-between; align-items: center; border-bottom: 2px solid black; padding-bottom: 10px;">
                 <h3 id="user-welcome" style="margin:0;"></h3>
-                <button onclick="logout()" style="background:red; color:white; border:none; padding: 5px 10px; cursor:pointer; font-family: inherit;">LOGOUT</button>
+                <div>
+                    <button onclick="toggleModal()" style="background:#eee; color:black; border:2px solid black; padding: 5px 10px; cursor:pointer; font-family: inherit; font-weight:bold; margin-right:5px;">COLLAPSE INFO</button>
+                    <button onclick="logout()" style="background:red; color:white; border:none; padding: 5px 10px; cursor:pointer; font-family: inherit;">LOGOUT</button>
+                </div>
             </div>
             
             <div id="lord-tabs" style="display:none; margin: 15px 0;">
@@ -135,21 +139,31 @@
         let currentPostId = null;
         let currentCommentRef = null;
 
+        // Dynamic Labeling logic
+        function updateMainButtonLabel() {
+            const btn = document.getElementById('auth-btn');
+            const modal = document.getElementById('admin-modal');
+            const isOpen = modal.style.display === 'block';
+
+            if (!currentUser) {
+                btn.innerText = "SIGN IN";
+            } else {
+                btn.innerText = isOpen ? "COLLAPSE INFO" : "ACCOUNT INFO";
+            }
+        }
+
         window.handleAuthClick = () => {
-            if (currentUser) { logout(); } else { toggleModal(); }
+            if (!currentUser) {
+                toggleModal();
+            } else {
+                toggleModal();
+            }
         };
 
         window.toggleModal = () => {
             const modal = document.getElementById('admin-modal');
             modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
-        };
-
-        window.showTab = (tab) => {
-            document.getElementById('tab-accounts').style.display = tab === 'accounts' ? 'block' : 'none';
-            document.getElementById('tab-audit').style.display = tab === 'audit' ? 'block' : 'none';
-            document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active-tab'));
-            event.target.classList.add('active-tab');
-            if(tab === 'audit') loadAudit();
+            updateMainButtonLabel();
         };
 
         window.attemptLogin = async () => {
@@ -164,7 +178,6 @@
                 document.getElementById('login-form').style.display = 'none';
                 document.getElementById('admin-tools').style.display = 'block';
                 document.getElementById('user-welcome').innerText = `${currentUser.display_name} [${currentUser.rank}]`;
-                document.getElementById('auth-btn').innerText = "LOGOUT";
                 
                 if (currentUser.rank === 'Lord') {
                     document.getElementById('lord-tabs').style.display = 'block';
@@ -173,19 +186,19 @@
                 } else {
                     document.getElementById('student-view').style.display = 'block';
                 }
-            } else { alert("Access Denied."); }
-        };
-
-        window.updateOwnPassword = () => {
-            const newPass = document.getElementById('changePass').value;
-            if(!newPass) return;
-            set(ref(db, `users/${currentUser.username}/password`), newPass).then(() => {
-                alert("Password Updated Successfully.");
-                document.getElementById('changePass').value = '';
-            });
+                updateMainButtonLabel();
+            } else { alert("Invalid Credentials."); }
         };
 
         window.logout = () => { location.reload(); };
+
+        window.showTab = (tab) => {
+            document.getElementById('tab-accounts').style.display = tab === 'accounts' ? 'block' : 'none';
+            document.getElementById('tab-audit').style.display = tab === 'audit' ? 'block' : 'none';
+            document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active-tab'));
+            event.target.classList.add('active-tab');
+            if(tab === 'audit') loadAudit();
+        };
 
         window.addAccount = () => {
             if (currentUser.rank !== 'Lord') return;
