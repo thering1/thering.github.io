@@ -108,7 +108,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, push, onChildAdded, off, remove, set, get, onValue, query, orderByChild, limitToLast, endBefore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // CONFIG A: RING (Images/Comments)
+        // Project A: The Ring (Data)
         const ringConfig = {
             apiKey: "AIzaSyCcjwKFOaKas5SCxoZg1Tgb6G58YCpmmTc",
             authDomain: "ring-data-789e9.firebaseapp.com",
@@ -116,7 +116,7 @@
             projectId: "ring-data-789e9"
         };
 
-        // CONFIG B: ACCOUNTS (User Info)
+        // Project B: Accounts (Identity)
         const accountConfig = {
             apiKey: "AIzaSyDHSXFPCiG2kjRAFzqUJn1OQoXD1bCtfH8",
             authDomain: "account-data-54450.firebaseapp.com",
@@ -135,7 +135,6 @@
         let currentCommentRef = null;
         let lastTimestamp = null;
         let isLoading = false;
-        const myFingerprint = btoa(navigator.userAgent).substring(0, 16);
 
         const sanitize = (str) => {
             const div = document.createElement('div');
@@ -143,19 +142,18 @@
             return div.innerHTML;
         };
 
-        // --- FEED ---
+        // --- FEED & LORD AUTHORITY ---
         async function loadPosts() {
             if (isLoading) return;
             isLoading = true;
-            try {
-                let q = lastTimestamp 
-                    ? query(ref(db, 'posts'), orderByChild('timestamp'), endBefore(lastTimestamp), limitToLast(20))
-                    : query(ref(db, 'posts'), orderByChild('timestamp'), limitToLast(20));
-                const snap = await get(q);
-                const batch = [];
-                snap.forEach(child => { batch.push({ key: child.key, ...child.val() }); });
-                batch.reverse().forEach(post => { renderPost(post); lastTimestamp = post.timestamp; });
-            } catch (e) { console.error(e); }
+            let q = lastTimestamp 
+                ? query(ref(db, 'posts'), orderByChild('timestamp'), endBefore(lastTimestamp), limitToLast(20))
+                : query(ref(db, 'posts'), orderByChild('timestamp'), limitToLast(20));
+            
+            const snap = await get(q);
+            const batch = [];
+            snap.forEach(child => { batch.push({ key: child.key, ...child.val() }); });
+            batch.reverse().forEach(post => { renderPost(post); lastTimestamp = post.timestamp; });
             isLoading = false;
         }
 
@@ -165,18 +163,31 @@
             img.src = post.image;
             img.className = 'post-image';
             img.id = `thumb-${post.key}`;
+            
+            // Left-click to view
             img.onclick = () => openPreview(post.image, post.key);
+            
+            // Right-click to Delete (Lord Only)
+            img.oncontextmenu = (e) => {
+                if (currentUser && currentUser.rank === 'Lord') {
+                    e.preventDefault();
+                    if (confirm("Erase this record from the Ring?")) {
+                        remove(ref(db, `posts/${post.key}`));
+                        remove(ref(db, `comments/${post.key}`)); // Wipe associated comments
+                        img.remove();
+                    }
+                }
+            };
+            
             document.getElementById('feed').appendChild(img);
         }
 
-        const observer = new IntersectionObserver(ent => { if (ent[0].isIntersecting) loadPosts(); }, { threshold: 0.1 });
-        observer.observe(document.getElementById('sentinel'));
-
-        // --- COMMENTS (FORMAT: Name, Rank of the Finger) ---
+        // --- COMMENTS (Name, Rank of the Finger) ---
         function openPreview(url, id) {
             currentPostId = id;
-            document.getElementById('upscaled-image').src = url;
-            document.getElementById('upscaled-image').style.display = 'block';
+            const previewImg = document.getElementById('upscaled-image');
+            previewImg.src = url;
+            previewImg.style.display = 'block';
             document.getElementById('comment-section').style.display = 'flex';
             
             const list = document.getElementById('comment-list');
@@ -189,17 +200,46 @@
                 const div = document.createElement('div');
                 div.className = 'comment-item';
                 
-                let header = "Anonymous";
+                let header = "Anonymous Outsider";
                 if (c.display_name) {
-                    header = `${sanitize(c.display_name)}, ${sanitize(c.rank)} of the ${sanitize(c.finger)}`;
+                    header = `${sanitize(c.display_name)}, ${sanitize(c.rank)} of the ${sanitize(c.finger || "Void")}`;
                 }
                 
                 div.innerHTML = `> <b>${header}:</b> ${sanitize(c.text)}`;
-                div.onclick = () => { if(['Lord','Maestro'].includes(currentUser?.rank)) remove(ref(db, `comments/${id}/${snap.key}`)); };
+                
+                // Click comment to delete (Lord/Maestro)
+                div.onclick = () => {
+                    if (currentUser && (currentUser.rank === 'Lord' || currentUser.rank === 'Maestro')) {
+                        if (confirm("Silence this comment?")) remove(ref(db, `comments/${id}/${snap.key}`));
+                    }
+                };
                 list.prepend(div);
             });
         }
 
+        // --- AUTH (Global Account DB) ---
+        document.getElementById('loginBtn').onclick = async () => {
+            const u = document.getElementById('adminUser').value;
+            const p = document.getElementById('adminPass').value;
+            const snap = await get(ref(userDb, `users/${u}`));
+            
+            if (snap.exists() && snap.val().password === p) {
+                currentUser = snap.val();
+                currentUser.username = u;
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('admin-tools').style.display = 'block';
+                document.getElementById('user-welcome').innerText = `${currentUser.display_name}, ${currentUser.rank} of the ${currentUser.finger || 'Void'}`;
+                document.getElementById('auth-btn').innerText = "ACCOUNT INFO";
+                
+                if (currentUser.rank === 'Lord') {
+                    document.getElementById('lord-tools').style.display = 'block';
+                    loadDirectory();
+                }
+            } else alert("Identity Unverified.");
+        };
+
+        // ... [Rest of your UI and Posting logic remains the same] ...
+        // Ensure you keep your postBtn.onclick, observer, and closeModalBtn handlers.
         document.getElementById('replyBtn').onclick = () => {
             const text = document.getElementById('replyInput').value.trim();
             if (!text || !currentPostId) return;
