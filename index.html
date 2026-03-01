@@ -29,23 +29,13 @@
         .post-btn:disabled { background: #666; cursor: not-allowed; }
         
         #auth-btn { position: fixed; bottom: 20px; right: 20px; background: black; color: white; border: none; padding: 10px 20px; font-size: 12px; cursor: pointer; z-index: 2000; font-weight: bold; }
-        
-        #middle-link-btn { 
-            position: fixed; bottom: 20px; left: 20px; 
-            background: white; color: black; border: 2px solid black; 
-            padding: 10px 20px; font-size: 12px; cursor: pointer; 
-            z-index: 2000; font-weight: bold; text-decoration: none;
-            display: inline-block; font-family: 'Courier New', Courier, monospace;
-        }
-        #middle-link-btn:hover { background: #eee; }
+        #middle-link-btn { position: fixed; bottom: 20px; left: 20px; background: white; color: black; border: 2px solid black; padding: 10px 20px; font-size: 12px; cursor: pointer; z-index: 2000; font-weight: bold; text-decoration: none; display: inline-block; font-family: 'Courier New', Courier, monospace; }
 
         #admin-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 4px solid black; padding: 20px; z-index: 3000; width: 700px; max-height: 85vh; overflow-y: auto; box-shadow: 15px 15px 0px #000; }
         .input-box { padding: 8px; border: 2px solid black; font-family: inherit; margin-bottom: 10px; }
         
         table { width: 100%; border-collapse: collapse; font-size: 0.75rem; margin-top: 15px; }
         th, td { border: 1px solid black; padding: 8px; text-align: left; }
-        .admin-tab-btn { background: #eee; border: 1px solid black; padding: 8px 15px; cursor: pointer; margin-right: 5px; font-weight: bold; }
-        .active-tab { background: black; color: white; }
     </style>
 </head>
 <body>
@@ -96,37 +86,20 @@
                     <button id="logoutBtn" style="background:red; color:white; border:none; padding:5px; cursor:pointer; margin-left:10px;">LOGOUT</button>
                 </div>
             </div>
-            
-            <div id="lord-tabs" style="display:none; margin:15px 0;">
-                <button class="admin-tab-btn active-tab" id="btn-acc">Accounts</button>
-                <button class="admin-tab-btn" id="btn-bans">Banned IDs</button>
-            </div>
-
-            <div id="tab-accounts" style="display:none;">
-                <div style="background:#f0f0f0; padding:15px; border:2px dashed black; margin-bottom:20px;">
-                    <h4 style="margin-top:0;">REGISTER NEW ACCOUNT</h4>
-                    <input type="text" id="regDisp" placeholder="Display Name" class="input-box" style="width:130px;">
-                    <input type="text" id="regUser" placeholder="Username" class="input-box" style="width:130px;">
-                    <input type="text" id="regPass" placeholder="Password" class="input-box" style="width:130px;">
-                    <input type="text" id="regRank" placeholder="Rank" class="input-box" style="width:100px;">
-                    <button id="createAccBtn" class="post-btn" style="padding:8px 15px;">CREATE</button>
+            <div id="lord-tools" style="display:none; margin-top:15px;">
+                <h4>USER DIRECTORY (ACCOUNT DB)</h4>
+                <div style="background:#f0f0f0; padding:10px; border:2px dashed black; margin-bottom:10px;">
+                    <input type="text" id="regDisp" placeholder="Disp Name" class="input-box" style="width:100px;">
+                    <input type="text" id="regUser" placeholder="User" class="input-box" style="width:100px;">
+                    <input type="text" id="regPass" placeholder="Pass" class="input-box" style="width:100px;">
+                    <input type="text" id="regRank" placeholder="Rank" class="input-box" style="width:80px;">
+                    <input type="text" id="regFinger" placeholder="Finger" class="input-box" style="width:80px;">
+                    <button id="createAccBtn" class="post-btn" style="padding:5px;">ADD</button>
                 </div>
-                <h4>USER DIRECTORY</h4>
                 <table>
-                    <thead><tr><th>Display Name</th><th>Username</th><th>Password</th><th>Rank</th><th>Action</th></tr></thead>
+                    <thead><tr><th>Display</th><th>User</th><th>Rank</th><th>Finger</th><th>Action</th></tr></thead>
                     <tbody id="acc-body"></tbody>
                 </table>
-            </div>
-
-            <div id="tab-bans" style="display:none;">
-                <h4>ACTIVE BANS</h4>
-                <table><thead><tr><th>Fingerprint ID</th><th>Action</th></tr></thead><tbody id="ban-body"></tbody></table>
-            </div>
-
-            <div id="student-view" style="display:none; margin-top:15px;">
-                <p><i>Membership active.</i></p>
-                <input type="password" id="changePass" placeholder="New Password" class="input-box"><br>
-                <button id="updatePassBtn" class="post-btn" style="padding:8px;">Update My Password</button>
             </div>
         </div>
     </div>
@@ -135,35 +108,42 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, push, onChildAdded, off, remove, set, get, onValue, query, orderByChild, limitToLast, endBefore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        const firebaseConfig = {
+        // CONFIG A: RING (Images/Comments)
+        const ringConfig = {
             apiKey: "AIzaSyCcjwKFOaKas5SCxoZg1Tgb6G58YCpmmTc",
             authDomain: "ring-data-789e9.firebaseapp.com",
             databaseURL: "https://ring-data-789e9-default-rtdb.asia-southeast1.firebasedatabase.app/",
-            projectId: "ring-data-789e9",
-            storageBucket: "ring-data-789e9.firebasestorage.app",
-            messagingSenderId: "97192604147",
-            appId: "1:97192604147:web:071c1fdcf08ea667d3e286"
+            projectId: "ring-data-789e9"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
+        // CONFIG B: ACCOUNTS (User Info)
+        const accountConfig = {
+            apiKey: "AIzaSyDHSXFPCiG2kjRAFzqUJn1OQoXD1bCtfH8",
+            authDomain: "account-data-54450.firebaseapp.com",
+            databaseURL: "https://account-data-54450-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "account-data-54450"
+        };
+
+        const ringApp = initializeApp(ringConfig, "ringApp");
+        const accountApp = initializeApp(accountConfig, "accountApp");
+
+        const db = getDatabase(ringApp);
+        const userDb = getDatabase(accountApp);
         
         let currentUser = null;
         let currentPostId = null;
         let currentCommentRef = null;
         let lastTimestamp = null;
         let isLoading = false;
-        let cooldownTime = 0;
         const myFingerprint = btoa(navigator.userAgent).substring(0, 16);
 
-        // --- Sanitization Tool ---
         const sanitize = (str) => {
             const div = document.createElement('div');
             div.textContent = str || "";
             return div.innerHTML;
         };
 
-        // --- FEED & INFINITE SCROLL ---
+        // --- FEED ---
         async function loadPosts() {
             if (isLoading) return;
             isLoading = true;
@@ -171,12 +151,11 @@
                 let q = lastTimestamp 
                     ? query(ref(db, 'posts'), orderByChild('timestamp'), endBefore(lastTimestamp), limitToLast(20))
                     : query(ref(db, 'posts'), orderByChild('timestamp'), limitToLast(20));
-
                 const snap = await get(q);
                 const batch = [];
                 snap.forEach(child => { batch.push({ key: child.key, ...child.val() }); });
                 batch.reverse().forEach(post => { renderPost(post); lastTimestamp = post.timestamp; });
-            } catch (e) { console.error("Load error:", e); }
+            } catch (e) { console.error(e); }
             isLoading = false;
         }
 
@@ -187,55 +166,17 @@
             img.className = 'post-image';
             img.id = `thumb-${post.key}`;
             img.onclick = () => openPreview(post.image, post.key);
-            img.oncontextmenu = (e) => {
-                e.preventDefault();
-                if (currentUser?.rank === 'Lord' && confirm(`Ban device ${post.posterId}?`)) set(ref(db, `bans/${post.posterId}`), true);
-            };
             document.getElementById('feed').appendChild(img);
         }
 
         const observer = new IntersectionObserver(ent => { if (ent[0].isIntersecting) loadPosts(); }, { threshold: 0.1 });
         observer.observe(document.getElementById('sentinel'));
 
-        // --- POSTING ---
-        const handlePost = async () => {
-            const banCheck = await get(ref(db, `bans/${myFingerprint}`));
-            if (banCheck.exists()) return alert("Your ID is banned from posting.");
-            
-            const file = document.getElementById('imageInput').files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                const imgData = e.target.result;
-                const checkSnap = await get(query(ref(db, 'posts'), limitToLast(100)));
-                let isDup = false;
-                checkSnap.forEach(c => { if(c.val().image === imgData) isDup = true; });
-                if(isDup) return alert("Error: Image already exists in The Ring.");
-
-                await push(ref(db, 'posts'), { image: imgData, timestamp: Date.now(), posterId: myFingerprint });
-                startCooldown();
-                location.reload();
-            };
-            reader.readAsDataURL(file);
-        };
-
-        function startCooldown() {
-            cooldownTime = 120;
-            const btn = document.getElementById('postBtn');
-            btn.disabled = true;
-            const timer = setInterval(() => {
-                cooldownTime--;
-                btn.innerText = `WAIT [${cooldownTime}s]`;
-                if (cooldownTime <= 0) { clearInterval(timer); btn.disabled = false; btn.innerText = "POST IMAGE"; }
-            }, 1000);
-        }
-
-       // --- COMMENT LOGIC ---
+        // --- COMMENTS (FORMAT: Name, Rank of the Finger) ---
         function openPreview(url, id) {
             currentPostId = id;
-            const img = document.getElementById('upscaled-image');
-            img.src = url; img.style.display = 'block';
+            document.getElementById('upscaled-image').src = url;
+            document.getElementById('upscaled-image').style.display = 'block';
             document.getElementById('comment-section').style.display = 'flex';
             
             const list = document.getElementById('comment-list');
@@ -248,150 +189,89 @@
                 const div = document.createElement('div');
                 div.className = 'comment-item';
                 
-                let content = "";
-                if (c.display_name && c.display_name.trim() !== "") {
-                    // Check if they have a rank/position
-                    const position = (c.rank && c.rank.trim() !== "") 
-                        ? `${sanitize(c.rank)} of the Ring` 
-                        : "";
-                    
-                    const header = position 
-                        ? `${sanitize(c.display_name)}, ${position}` 
-                        : sanitize(c.display_name);
-                        
-                    content = `> <b>${header}:</b> ${sanitize(c.text)}`;
-                } else {
-                    // Anonymous/Guest view
-                    content = `> ${sanitize(c.text)}`;
+                let header = "Anonymous";
+                if (c.display_name) {
+                    header = `${sanitize(c.display_name)}, ${sanitize(c.rank)} of the ${sanitize(c.finger)}`;
                 }
                 
-                div.innerHTML = content;
-                
-                // Keep the deletion logic for high-ranking members
-                div.onclick = () => { 
-                    if(['Lord','Maestro','Docente'].includes(currentUser?.rank)) {
-                        if(confirm("Delete this comment?")) {
-                            remove(ref(db, `comments/${id}/${snap.key}`));
-                            div.remove();
-                        }
-                    }
-                };
+                div.innerHTML = `> <b>${header}:</b> ${sanitize(c.text)}`;
+                div.onclick = () => { if(['Lord','Maestro'].includes(currentUser?.rank)) remove(ref(db, `comments/${id}/${snap.key}`)); };
                 list.prepend(div);
             });
         }
-        const postReply = () => {
+
+        document.getElementById('replyBtn').onclick = () => {
             const text = document.getElementById('replyInput').value.trim();
             if (!text || !currentPostId) return;
-            push(ref(db, `comments/${currentPostId}`), {
-                text, 
-                display_name: currentUser ? currentUser.display_name : '', 
-                rank: currentUser ? currentUser.rank : '', 
-                timestamp: Date.now()
-            });
+            const payload = { text, timestamp: Date.now() };
+            if (currentUser) {
+                payload.display_name = currentUser.display_name;
+                payload.rank = currentUser.rank;
+                payload.finger = currentUser.finger;
+            }
+            push(ref(db, `comments/${currentPostId}`), payload);
             document.getElementById('replyInput').value = '';
         };
 
-        // --- ADMIN SUITE ---
-        const showTab = (tab) => {
-            document.getElementById('tab-accounts').style.display = tab === 'accounts' ? 'block' : 'none';
-            document.getElementById('tab-bans').style.display = tab === 'bans' ? 'block' : 'none';
-            document.getElementById('btn-acc').className = tab === 'accounts' ? 'admin-tab-btn active-tab' : 'admin-tab-btn';
-            document.getElementById('btn-bans').className = tab === 'bans' ? 'admin-tab-btn active-tab' : 'admin-tab-btn';
-
-            if (tab === 'accounts') {
-                onValue(ref(db, 'users'), snap => {
-                    const body = document.getElementById('acc-body'); body.innerHTML = '';
-                    snap.forEach(child => {
-                        const u = child.key; const d = child.val();
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td><input type="text" id="ed-disp-${u}" value="${sanitize(d.display_name)}" style="width:100px;"></td>
-                            <td>${sanitize(u)}</td>
-                            <td><input type="text" id="ed-pass-${u}" value="${sanitize(d.password)}" style="width:100px;"></td>
-                            <td><input type="text" id="ed-rank-${u}" value="${sanitize(d.rank)}" style="width:100px;"></td>
-                        `;
-                        const actTd = document.createElement('td');
-                        const sBtn = document.createElement('button'); sBtn.textContent = "SAVE"; sBtn.onclick = () => saveEdit(u);
-                        const dBtn = document.createElement('button'); dBtn.textContent = "X"; dBtn.style.color="red"; dBtn.onclick = () => delAcc(u);
-                        actTd.append(sBtn, dBtn);
-                        row.appendChild(actTd);
-                        body.appendChild(row);
-                    });
-                });
-            }
-            if (tab === 'bans') {
-                onValue(ref(db, 'bans'), snap => {
-                    const body = document.getElementById('ban-body'); body.innerHTML = '';
-                    snap.forEach(b => { 
-                        const row = document.createElement('tr');
-                        row.innerHTML = `<td>${sanitize(b.key)}</td>`;
-                        const td = document.createElement('td');
-                        const ubBtn = document.createElement('button'); ubBtn.textContent = "Lift Ban"; ubBtn.onclick = () => unban(b.key);
-                        td.appendChild(ubBtn);
-                        row.appendChild(td);
-                        body.appendChild(row);
-                    });
-                });
-            }
-        };
-
-        const saveEdit = async (u) => {
-            const d = document.getElementById(`ed-disp-${u}`).value, p = document.getElementById(`ed-pass-${u}`).value, r = document.getElementById(`ed-rank-${u}`).value;
-            await set(ref(db, `users/${u}`), { display_name: d, password: p, rank: r });
-            alert("Saved.");
-        };
-
-        const delAcc = (u) => { if(confirm("Delete?")) remove(ref(db, `users/${u}`)); };
-        const unban = (id) => remove(ref(db, `bans/${id}`));
-
-        const attemptLogin = async () => {
-            const u = document.getElementById('adminUser').value, p = document.getElementById('adminPass').value;
-            const snap = await get(ref(db, `users/${u}`));
+        // --- AUTH (NEW DATABASE HIERARCHY) ---
+        document.getElementById('loginBtn').onclick = async () => {
+            const u = document.getElementById('adminUser').value;
+            const p = document.getElementById('adminPass').value;
+            const snap = await get(ref(userDb, `users/${u}`)); // users > username
+            
             if (snap.exists() && snap.val().password === p) {
-                currentUser = snap.val(); currentUser.username = u;
+                currentUser = snap.val();
+                currentUser.username = u;
                 document.getElementById('login-form').style.display = 'none';
                 document.getElementById('admin-tools').style.display = 'block';
                 document.getElementById('user-welcome').innerText = `${currentUser.display_name} [${currentUser.rank}]`;
                 document.getElementById('auth-btn').innerText = "ACCOUNT INFO";
-                if (currentUser.rank === 'Lord') { document.getElementById('lord-tabs').style.display = 'block'; showTab('accounts'); }
-                else { document.getElementById('student-view').style.display = 'block'; }
-            } else alert("Denied.");
+                if (currentUser.rank === 'Lord') {
+                    document.getElementById('lord-tools').style.display = 'block';
+                    loadUserDir();
+                }
+            } else alert("Access Denied.");
         };
 
-        const toggleModal = () => { 
-            const m = document.getElementById('admin-modal'); m.style.display = m.style.display === 'block' ? 'none' : 'block';
-            if (currentUser) document.getElementById('auth-btn').innerText = m.style.display === 'block' ? "COLLAPSE INFO" : "ACCOUNT INFO";
-        };
+        function loadUserDir() {
+            onValue(ref(userDb, 'users'), snap => {
+                const body = document.getElementById('acc-body'); body.innerHTML = '';
+                snap.forEach(child => {
+                    const u = child.key; const d = child.val();
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td>${sanitize(d.display_name)}</td><td>${sanitize(u)}</td><td>${sanitize(d.rank)}</td><td>${sanitize(d.finger)}</td>`;
+                    const delTd = document.createElement('td');
+                    const delBtn = document.createElement('button'); delBtn.textContent = "X"; delBtn.onclick = () => remove(ref(userDb, `users/${u}`));
+                    delTd.appendChild(delBtn); row.appendChild(delTd);
+                    body.appendChild(row);
+                });
+            });
+        }
 
-        // --- Event Listeners ---
-        document.getElementById('postBtn').onclick = handlePost;
-        document.getElementById('replyBtn').onclick = postReply;
-        document.getElementById('auth-btn').onclick = toggleModal;
-        document.getElementById('loginBtn').onclick = attemptLogin;
-        document.getElementById('closeModalBtn').onclick = toggleModal;
-        document.getElementById('collapseBtn').onclick = toggleModal;
-        document.getElementById('logoutBtn').onclick = () => location.reload();
-        document.getElementById('btn-acc').onclick = () => showTab('accounts');
-        document.getElementById('btn-bans').onclick = () => showTab('bans');
-        document.getElementById('createAccBtn').onclick = async () => {
-            const d = document.getElementById('regDisp').value, u = document.getElementById('regUser').value, p = document.getElementById('regPass').value, r = document.getElementById('regRank').value;
-            if(!u || !p) return alert("Fill required fields.");
-            await set(ref(db, `users/${u}`), { display_name: d, password: p, rank: r });
-            alert("Registered.");
-        };
-        document.getElementById('updatePassBtn').onclick = async () => {
-            const newP = document.getElementById('changePass').value;
-            if(!newP) return;
-            await set(ref(db, `users/${currentUser.username}/password`), newP);
-            alert("Password updated.");
-        };
-        document.getElementById('upscaled-image').oncontextmenu = (e) => {
-            e.preventDefault();
-            if (['Lord','Maestro'].includes(currentUser?.rank) && confirm("Erase post?")) {
-                remove(ref(db, `posts/${currentPostId}`));
-                remove(ref(db, `comments/${currentPostId}`));
+        // --- POSTING ---
+        document.getElementById('postBtn').onclick = async () => {
+            const file = document.getElementById('imageInput').files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                await push(ref(db, 'posts'), { image: e.target.result, timestamp: Date.now(), posterId: myFingerprint });
                 location.reload();
-            }
+            };
+            reader.readAsDataURL(file);
+        };
+
+        // --- UI ---
+        document.getElementById('auth-btn').onclick = () => {
+            const m = document.getElementById('admin-modal'); m.style.display = m.style.display === 'block' ? 'none' : 'block';
+        };
+        document.getElementById('closeModalBtn').onclick = () => document.getElementById('admin-modal').style.display = 'none';
+        document.getElementById('collapseBtn').onclick = () => document.getElementById('admin-modal').style.display = 'none';
+        document.getElementById('logoutBtn').onclick = () => location.reload();
+        document.getElementById('createAccBtn').onclick = async () => {
+            const u = document.getElementById('regUser').value, d = document.getElementById('regDisp').value, p = document.getElementById('regPass').value, r = document.getElementById('regRank').value, f = document.getElementById('regFinger').value;
+            if(!u || !p) return;
+            await set(ref(userDb, `users/${u}`), { display_name: d, password: p, rank: r, finger: f });
+            alert("Sibling Added.");
         };
 
     </script>
