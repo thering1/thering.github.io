@@ -231,7 +231,7 @@
             }, 1000);
         }
 
-        // --- COMMENT LOGIC ---
+       // --- COMMENT LOGIC ---
         function openPreview(url, id) {
             currentPostId = id;
             const img = document.getElementById('upscaled-image');
@@ -249,19 +249,36 @@
                 div.className = 'comment-item';
                 
                 let content = "";
-                if (c.display_name) {
-                    const header = c.rank ? `${sanitize(c.display_name)}, ${sanitize(c.rank)}` : sanitize(c.display_name);
+                if (c.display_name && c.display_name.trim() !== "") {
+                    // Check if they have a rank/position
+                    const position = (c.rank && c.rank.trim() !== "") 
+                        ? `${sanitize(c.rank)} of the Ring` 
+                        : "";
+                    
+                    const header = position 
+                        ? `${sanitize(c.display_name)}, ${position}` 
+                        : sanitize(c.display_name);
+                        
                     content = `> <b>${header}:</b> ${sanitize(c.text)}`;
                 } else {
+                    // Anonymous/Guest view
                     content = `> ${sanitize(c.text)}`;
                 }
                 
                 div.innerHTML = content;
-                div.onclick = () => { if(['Lord','Maestro','Docente'].includes(currentUser?.rank)) remove(ref(db, `comments/${id}/${snap.key}`)); };
+                
+                // Keep the deletion logic for high-ranking members
+                div.onclick = () => { 
+                    if(['Lord','Maestro','Docente'].includes(currentUser?.rank)) {
+                        if(confirm("Delete this comment?")) {
+                            remove(ref(db, `comments/${id}/${snap.key}`));
+                            div.remove();
+                        }
+                    }
+                };
                 list.prepend(div);
             });
         }
-
         const postReply = () => {
             const text = document.getElementById('replyInput').value.trim();
             if (!text || !currentPostId) return;
