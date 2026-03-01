@@ -22,7 +22,7 @@
         
         #comment-section { flex-grow: 1; display: none; flex-direction: column; max-width: 30%; border-left: 2px solid black; padding-left: 15px; }
         #comment-list { flex-grow: 1; overflow-y: auto; margin-top: 10px; font-size: 0.85rem; }
-        .comment-item { padding: 8px; border-bottom: 1px solid #ddd; word-wrap: break-word; }
+        .comment-item { padding: 8px; border-bottom: 1px solid #ddd; word-wrap: break-word; cursor: pointer; }
         
         .controls { position: fixed; bottom: 0; left: 0; width: 100%; background: white; padding: 20px; border-top: 3px solid black; display: flex; justify-content: center; gap: 20px; z-index: 1000; }
         .post-btn { background: black; color: white; border: none; padding: 12px 40px; font-weight: bold; cursor: pointer; font-family: inherit; transition: 0.2s; }
@@ -30,22 +30,12 @@
         
         #auth-btn { position: fixed; bottom: 20px; right: 20px; background: black; color: white; border: none; padding: 10px 20px; font-size: 12px; cursor: pointer; z-index: 2000; font-weight: bold; }
         
-        /* The Middle Button Styling */
         #middle-link-btn { 
-            position: fixed; 
-            bottom: 20px; 
-            left: 20px; 
-            background: white; 
-            color: black; 
-            border: 2px solid black; 
-            padding: 10px 20px; 
-            font-size: 12px; 
-            cursor: pointer; 
-            z-index: 2000; 
-            font-weight: bold; 
-            text-decoration: none;
-            display: inline-block;
-            font-family: 'Courier New', Courier, monospace;
+            position: fixed; bottom: 20px; left: 20px; 
+            background: white; color: black; border: 2px solid black; 
+            padding: 10px 20px; font-size: 12px; cursor: pointer; 
+            z-index: 2000; font-weight: bold; text-decoration: none;
+            display: inline-block; font-family: 'Courier New', Courier, monospace;
         }
         #middle-link-btn:hover { background: #eee; }
 
@@ -70,7 +60,7 @@
             <div id="sentinel"></div>
         </div>
         <div id="preview-area">
-            <img id="upscaled-image" src="" alt="View" oncontextmenu="window.handleBigImageRightClick(event)">
+            <img id="upscaled-image" src="" alt="View">
             <div id="comment-section">
                 <div id="reply-ui">
                     <input type="text" id="replyInput" placeholder="ENTER REPLY..." class="input-box" style="width:85%;">
@@ -83,33 +73,33 @@
 
     <div class="controls">
         <input type="file" id="imageInput" accept="image/*">
-        <button class="post-btn" id="postBtn" onclick="window.handlePostClick()">POST IMAGE</button>
+        <button class="post-btn" id="postBtn">POST IMAGE</button>
     </div>
 
     <a href="https://thering1.github.io/themiddle.github.io/" id="middle-link-btn">THE MIDDLE</a>
-    <button id="auth-btn" onclick="window.toggleModal()">SIGN IN</button>
+    <button id="auth-btn">SIGN IN</button>
 
     <div id="admin-modal">
         <div id="login-form">
             <h3>SIGN IN</h3>
             <input type="text" id="adminUser" placeholder="Username" class="input-box"><br>
             <input type="password" id="adminPass" placeholder="Password" class="input-box"><br>
-            <button onclick="window.attemptLogin()" class="post-btn">LOGIN</button>
-            <button onclick="window.toggleModal()" style="border:none; background:none; cursor:pointer; text-decoration:underline; margin-left:10px;">Cancel</button>
+            <button id="loginBtn" class="post-btn">LOGIN</button>
+            <button id="closeModalBtn" style="border:none; background:none; cursor:pointer; text-decoration:underline; margin-left:10px;">Cancel</button>
         </div>
 
         <div id="admin-tools" style="display:none;">
             <div style="display:flex; justify-content: space-between; align-items: center; border-bottom: 3px solid black; padding-bottom: 15px;">
                 <h3 id="user-welcome" style="margin:0;"></h3>
                 <div>
-                    <button onclick="window.toggleModal()" style="border:2px solid black; padding:5px; cursor:pointer; font-weight:bold;">COLLAPSE</button>
-                    <button onclick="window.logout()" style="background:red; color:white; border:none; padding:5px; cursor:pointer; margin-left:10px;">LOGOUT</button>
+                    <button id="collapseBtn" style="border:2px solid black; padding:5px; cursor:pointer; font-weight:bold;">COLLAPSE</button>
+                    <button id="logoutBtn" style="background:red; color:white; border:none; padding:5px; cursor:pointer; margin-left:10px;">LOGOUT</button>
                 </div>
             </div>
             
             <div id="lord-tabs" style="display:none; margin:15px 0;">
-                <button class="admin-tab-btn active-tab" id="btn-acc" onclick="window.showTab('accounts')">Accounts</button>
-                <button class="admin-tab-btn" id="btn-bans" onclick="window.showTab('bans')">Banned IDs</button>
+                <button class="admin-tab-btn active-tab" id="btn-acc">Accounts</button>
+                <button class="admin-tab-btn" id="btn-bans">Banned IDs</button>
             </div>
 
             <div id="tab-accounts" style="display:none;">
@@ -119,7 +109,7 @@
                     <input type="text" id="regUser" placeholder="Username" class="input-box" style="width:130px;">
                     <input type="text" id="regPass" placeholder="Password" class="input-box" style="width:130px;">
                     <input type="text" id="regRank" placeholder="Rank" class="input-box" style="width:100px;">
-                    <button onclick="window.registerAccount()" class="post-btn" style="padding:8px 15px;">CREATE</button>
+                    <button id="createAccBtn" class="post-btn" style="padding:8px 15px;">CREATE</button>
                 </div>
                 <h4>USER DIRECTORY</h4>
                 <table>
@@ -136,7 +126,7 @@
             <div id="student-view" style="display:none; margin-top:15px;">
                 <p><i>Membership active.</i></p>
                 <input type="password" id="changePass" placeholder="New Password" class="input-box"><br>
-                <button onclick="window.updateOwnPass()" class="post-btn" style="padding:8px;">Update My Password</button>
+                <button id="updatePassBtn" class="post-btn" style="padding:8px;">Update My Password</button>
             </div>
         </div>
     </div>
@@ -146,13 +136,13 @@
         import { getDatabase, ref, push, onChildAdded, off, remove, set, get, onValue, query, orderByChild, limitToLast, endBefore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyCHSN6HiR50_sFT7L8p0bOUVDBb3KBpJiY",
-            authDomain: "the-ring-97f20.firebaseapp.com",
-            projectId: "the-ring-97f20",
-            storageBucket: "the-ring-97f20.firebasestorage.app",
-            messagingSenderId: "254314705601",
-            appId: "1:254314705601:web:80eea55a563f7a01f95a40",
-            databaseURL: "https://the-ring-97f20-default-rtdb.asia-southeast1.firebasedatabase.app"
+            apiKey: "AIzaSyCcjwKFOaKas5SCxoZg1Tgb6G58YCpmmTc",
+            authDomain: "ring-data-789e9.firebaseapp.com",
+            databaseURL: "https://ring-data-789e9-default-rtdb.asia-southeast1.firebasedatabase.app/",
+            projectId: "ring-data-789e9",
+            storageBucket: "ring-data-789e9.firebasestorage.app",
+            messagingSenderId: "97192604147",
+            appId: "1:97192604147:web:071c1fdcf08ea667d3e286"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -165,6 +155,13 @@
         let isLoading = false;
         let cooldownTime = 0;
         const myFingerprint = btoa(navigator.userAgent).substring(0, 16);
+
+        // --- Sanitization Tool ---
+        const sanitize = (str) => {
+            const div = document.createElement('div');
+            div.textContent = str || "";
+            return div.innerHTML;
+        };
 
         // --- FEED & INFINITE SCROLL ---
         async function loadPosts() {
@@ -200,8 +197,8 @@
         const observer = new IntersectionObserver(ent => { if (ent[0].isIntersecting) loadPosts(); }, { threshold: 0.1 });
         observer.observe(document.getElementById('sentinel'));
 
-        // --- POSTING & DUPLICATES ---
-        window.handlePostClick = async () => {
+        // --- POSTING ---
+        const handlePost = async () => {
             const banCheck = await get(ref(db, `bans/${myFingerprint}`));
             if (banCheck.exists()) return alert("Your ID is banned from posting.");
             
@@ -216,7 +213,7 @@
                 checkSnap.forEach(c => { if(c.val().image === imgData) isDup = true; });
                 if(isDup) return alert("Error: Image already exists in The Ring.");
 
-                await set(push(ref(db, 'posts')), { image: imgData, timestamp: Date.now(), posterId: myFingerprint });
+                await push(ref(db, 'posts'), { image: imgData, timestamp: Date.now(), posterId: myFingerprint });
                 startCooldown();
                 location.reload();
             };
@@ -252,11 +249,11 @@
                 div.className = 'comment-item';
                 
                 let content = "";
-                if (c.display_name && c.display_name !== "") {
-                    const header = c.rank ? `${c.display_name}, ${c.rank} of the Ring` : c.display_name;
-                    content = `> <b>${header}:</b> ${c.text}`;
+                if (c.display_name) {
+                    const header = c.rank ? `${sanitize(c.display_name)}, ${sanitize(c.rank)}` : sanitize(c.display_name);
+                    content = `> <b>${header}:</b> ${sanitize(c.text)}`;
                 } else {
-                    content = `> ${c.text}`;
+                    content = `> ${sanitize(c.text)}`;
                 }
                 
                 div.innerHTML = content;
@@ -265,17 +262,20 @@
             });
         }
 
-        window.postReply = () => {
-            const text = document.getElementById('replyInput').value;
+        const postReply = () => {
+            const text = document.getElementById('replyInput').value.trim();
             if (!text || !currentPostId) return;
             push(ref(db, `comments/${currentPostId}`), {
-                text, display_name: currentUser ? currentUser.display_name : '', rank: currentUser ? currentUser.rank : '', timestamp: Date.now()
+                text, 
+                display_name: currentUser ? currentUser.display_name : '', 
+                rank: currentUser ? currentUser.rank : '', 
+                timestamp: Date.now()
             });
             document.getElementById('replyInput').value = '';
         };
 
-        // --- LORD ADMIN SUITE ---
-        window.showTab = (tab) => {
+        // --- ADMIN SUITE ---
+        const showTab = (tab) => {
             document.getElementById('tab-accounts').style.display = tab === 'accounts' ? 'block' : 'none';
             document.getElementById('tab-bans').style.display = tab === 'bans' ? 'block' : 'none';
             document.getElementById('btn-acc').className = tab === 'accounts' ? 'admin-tab-btn active-tab' : 'admin-tab-btn';
@@ -286,45 +286,48 @@
                     const body = document.getElementById('acc-body'); body.innerHTML = '';
                     snap.forEach(child => {
                         const u = child.key; const d = child.val();
-                        body.innerHTML += `<tr>
-                            <td><input type="text" id="ed-disp-${u}" value="${d.display_name||''}" style="width:100px;"></td>
-                            <td>${u}</td>
-                            <td><input type="text" id="ed-pass-${u}" value="${d.password||''}" style="width:100px;"></td>
-                            <td><input type="text" id="ed-rank-${u}" value="${d.rank||''}" style="width:100px;"></td>
-                            <td>
-                                <button onclick="window.saveEdit('${u}')">SAVE</button>
-                                <button onclick="window.delAcc('${u}')" style="color:red;">X</button>
-                            </td>
-                        </tr>`;
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td><input type="text" id="ed-disp-${u}" value="${sanitize(d.display_name)}" style="width:100px;"></td>
+                            <td>${sanitize(u)}</td>
+                            <td><input type="text" id="ed-pass-${u}" value="${sanitize(d.password)}" style="width:100px;"></td>
+                            <td><input type="text" id="ed-rank-${u}" value="${sanitize(d.rank)}" style="width:100px;"></td>
+                        `;
+                        const actTd = document.createElement('td');
+                        const sBtn = document.createElement('button'); sBtn.textContent = "SAVE"; sBtn.onclick = () => saveEdit(u);
+                        const dBtn = document.createElement('button'); dBtn.textContent = "X"; dBtn.style.color="red"; dBtn.onclick = () => delAcc(u);
+                        actTd.append(sBtn, dBtn);
+                        row.appendChild(actTd);
+                        body.appendChild(row);
                     });
                 });
             }
             if (tab === 'bans') {
                 onValue(ref(db, 'bans'), snap => {
                     const body = document.getElementById('ban-body'); body.innerHTML = '';
-                    snap.forEach(b => { body.innerHTML += `<tr><td>${b.key}</td><td><button onclick="window.unban('${b.key}')">Lift Ban</button></td></tr>`; });
+                    snap.forEach(b => { 
+                        const row = document.createElement('tr');
+                        row.innerHTML = `<td>${sanitize(b.key)}</td>`;
+                        const td = document.createElement('td');
+                        const ubBtn = document.createElement('button'); ubBtn.textContent = "Lift Ban"; ubBtn.onclick = () => unban(b.key);
+                        td.appendChild(ubBtn);
+                        row.appendChild(td);
+                        body.appendChild(row);
+                    });
                 });
             }
         };
 
-        window.registerAccount = async () => {
-            const d = document.getElementById('regDisp').value, u = document.getElementById('regUser').value, p = document.getElementById('regPass').value, r = document.getElementById('regRank').value;
-            if(!u || !p) return alert("Fill required fields.");
-            await set(ref(db, `users/${u}`), { display_name: d, password: p, rank: r });
-            alert("Registered.");
-        };
-
-        window.saveEdit = async (u) => {
+        const saveEdit = async (u) => {
             const d = document.getElementById(`ed-disp-${u}`).value, p = document.getElementById(`ed-pass-${u}`).value, r = document.getElementById(`ed-rank-${u}`).value;
             await set(ref(db, `users/${u}`), { display_name: d, password: p, rank: r });
             alert("Saved.");
         };
 
-        window.delAcc = (u) => { if(confirm("Delete?")) remove(ref(db, `users/${u}`)); };
-        window.unban = (id) => remove(ref(db, `bans/${id}`));
+        const delAcc = (u) => { if(confirm("Delete?")) remove(ref(db, `users/${u}`)); };
+        const unban = (id) => remove(ref(db, `bans/${id}`));
 
-        // --- AUTH & MISC ---
-        window.attemptLogin = async () => {
+        const attemptLogin = async () => {
             const u = document.getElementById('adminUser').value, p = document.getElementById('adminPass').value;
             const snap = await get(ref(db, `users/${u}`));
             if (snap.exists() && snap.val().password === p) {
@@ -333,18 +336,39 @@
                 document.getElementById('admin-tools').style.display = 'block';
                 document.getElementById('user-welcome').innerText = `${currentUser.display_name} [${currentUser.rank}]`;
                 document.getElementById('auth-btn').innerText = "ACCOUNT INFO";
-                if (currentUser.rank === 'Lord') { document.getElementById('lord-tabs').style.display = 'block'; window.showTab('accounts'); }
+                if (currentUser.rank === 'Lord') { document.getElementById('lord-tabs').style.display = 'block'; showTab('accounts'); }
                 else { document.getElementById('student-view').style.display = 'block'; }
             } else alert("Denied.");
         };
 
-        window.toggleModal = () => { 
+        const toggleModal = () => { 
             const m = document.getElementById('admin-modal'); m.style.display = m.style.display === 'block' ? 'none' : 'block';
             if (currentUser) document.getElementById('auth-btn').innerText = m.style.display === 'block' ? "COLLAPSE INFO" : "ACCOUNT INFO";
         };
-        window.logout = () => location.reload();
-        document.getElementById('replyBtn').onclick = window.postReply;
-        window.handleBigImageRightClick = (e) => {
+
+        // --- Event Listeners ---
+        document.getElementById('postBtn').onclick = handlePost;
+        document.getElementById('replyBtn').onclick = postReply;
+        document.getElementById('auth-btn').onclick = toggleModal;
+        document.getElementById('loginBtn').onclick = attemptLogin;
+        document.getElementById('closeModalBtn').onclick = toggleModal;
+        document.getElementById('collapseBtn').onclick = toggleModal;
+        document.getElementById('logoutBtn').onclick = () => location.reload();
+        document.getElementById('btn-acc').onclick = () => showTab('accounts');
+        document.getElementById('btn-bans').onclick = () => showTab('bans');
+        document.getElementById('createAccBtn').onclick = async () => {
+            const d = document.getElementById('regDisp').value, u = document.getElementById('regUser').value, p = document.getElementById('regPass').value, r = document.getElementById('regRank').value;
+            if(!u || !p) return alert("Fill required fields.");
+            await set(ref(db, `users/${u}`), { display_name: d, password: p, rank: r });
+            alert("Registered.");
+        };
+        document.getElementById('updatePassBtn').onclick = async () => {
+            const newP = document.getElementById('changePass').value;
+            if(!newP) return;
+            await set(ref(db, `users/${currentUser.username}/password`), newP);
+            alert("Password updated.");
+        };
+        document.getElementById('upscaled-image').oncontextmenu = (e) => {
             e.preventDefault();
             if (['Lord','Maestro'].includes(currentUser?.rank) && confirm("Erase post?")) {
                 remove(ref(db, `posts/${currentPostId}`));
