@@ -30,6 +30,25 @@
         
         #auth-btn { position: fixed; bottom: 20px; right: 20px; background: black; color: white; border: none; padding: 10px 20px; font-size: 12px; cursor: pointer; z-index: 2000; font-weight: bold; }
         
+        /* The Middle Button Styling */
+        #middle-link-btn { 
+            position: fixed; 
+            bottom: 20px; 
+            left: 20px; 
+            background: white; 
+            color: black; 
+            border: 2px solid black; 
+            padding: 10px 20px; 
+            font-size: 12px; 
+            cursor: pointer; 
+            z-index: 2000; 
+            font-weight: bold; 
+            text-decoration: none;
+            display: inline-block;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        #middle-link-btn:hover { background: #eee; }
+
         #admin-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 4px solid black; padding: 20px; z-index: 3000; width: 700px; max-height: 85vh; overflow-y: auto; box-shadow: 15px 15px 0px #000; }
         .input-box { padding: 8px; border: 2px solid black; font-family: inherit; margin-bottom: 10px; }
         
@@ -67,6 +86,7 @@
         <button class="post-btn" id="postBtn" onclick="window.handlePostClick()">POST IMAGE</button>
     </div>
 
+    <a href="https://thering1.github.io/themiddle.github.io/" id="middle-link-btn">THE MIDDLE</a>
     <button id="auth-btn" onclick="window.toggleModal()">SIGN IN</button>
 
     <div id="admin-modal">
@@ -214,7 +234,7 @@
             }, 1000);
         }
 
-        // --- COMMENT LOGIC WITH > PROMPT ---
+        // --- COMMENT LOGIC ---
         function openPreview(url, id) {
             currentPostId = id;
             const img = document.getElementById('upscaled-image');
@@ -233,11 +253,9 @@
                 
                 let content = "";
                 if (c.display_name && c.display_name !== "") {
-                    // Logic: > Display Name, Rank of the Ring: Message
                     const header = c.rank ? `${c.display_name}, ${c.rank} of the Ring` : c.display_name;
                     content = `> <b>${header}:</b> ${c.text}`;
                 } else {
-                    // Logic: > Message (Anonymous)
                     content = `> ${c.text}`;
                 }
                 
