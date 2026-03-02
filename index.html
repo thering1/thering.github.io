@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Ring</title>
     <link rel="icon" type="image/png" href="The_Ring_Icon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bangers&display=swap" rel="stylesheet">
     
     <style>
         body { margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; background: #fff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
@@ -28,7 +29,13 @@
         .post-btn { background: black; color: white; border: none; padding: 12px 40px; font-weight: bold; cursor: pointer; font-family: inherit; transition: 0.2s; }
         .post-btn:hover { background: #333; }
         
-        .nav-link-btn { background: white; color: black; border: 2px solid black; padding: 10px 20px; font-size: 12px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; font-family: 'Courier New', Courier, monospace; }
+        .nav-link-btn { padding: 10px 20px; font-size: 12px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; }
+
+        /* --- FINGER SPECIFIC BUTTON THEMES --- */
+        .btn-middle { font-family: 'Bangers', cursive; color: #ffd700; background: #2e004f; border: 2px solid #ffd700; }
+        .btn-index { font-family: 'Share Tech Mono', monospace; color: #00f2ff; background: #000; border: 2px solid #00f2ff; text-transform: uppercase; }
+        .btn-pinky { font-family: sans-serif; color: #1a241f; background: #8da399; border: 2px solid #a35d5d; }
+        .btn-thumb { font-family: sans-serif; color: white; background: #b22222; border: 2px solid #ffcc00; }
 
         #auth-btn { position: fixed; bottom: 20px; right: 20px; background: black; color: white; border: none; padding: 10px 20px; font-size: 12px; cursor: pointer; z-index: 2000; font-weight: bold; }
         #nav-group { position: fixed; bottom: 20px; left: 20px; display: flex; gap: 10px; z-index: 2000; }
@@ -68,10 +75,10 @@
     </div>
 
     <div id="nav-group">
-        <a href="https://thering1.github.io/themiddle.github.io/" class="nav-link-btn">THE MIDDLE</a>
-        <a href="https://thering1.github.io/theindex.github.io/" class="nav-link-btn">THE INDEX</a>
-        <a href="https://thering1.github.io/thepinky.github.io/" class="nav-link-btn">THE PINKY</a>
-        <a href="https://thering1.github.io/thethumb.github.io/" class="nav-link-btn">THE THUMB</a>
+        <a href="https://thering1.github.io/themiddle.github.io/" class="nav-link-btn btn-middle">THE MIDDLE</a>
+        <a href="https://thering1.github.io/theindex.github.io/" class="nav-link-btn btn-index">THE INDEX</a>
+        <a href="https://thering1.github.io/thepinky.github.io/" class="nav-link-btn btn-pinky">THE PINKY</a>
+        <a href="https://thering1.github.io/thethumb.github.io/" class="nav-link-btn btn-thumb">THE THUMB</a>
     </div>
     
     <button id="auth-btn">SIGN IN</button>
@@ -145,7 +152,6 @@
             return div.innerHTML;
         };
 
-        // --- RESTORED: LOAD POSTS FROM FIREBASE ---
         onChildAdded(ref(db, 'posts'), (snapshot) => {
             const post = snapshot.val();
             renderPost({ key: snapshot.key, ...post });
