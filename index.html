@@ -15,8 +15,7 @@
         .main-container { display: flex; flex-grow: 1; overflow: hidden; width: 100%; }
         #feed { width: 400px; display: flex; flex-direction: column; align-items: flex-start; overflow-y: auto; padding: 20px 20px 150px 5%; gap: 30px; border-right: 2px solid #eee; scroll-behavior: smooth; }
         .post-image { width: 300px; height: 300px; object-fit: cover; border: 3px solid #000; cursor: pointer; flex-shrink: 0; background: #f9f9f9; }
-        #sentinel { width: 100%; height: 50px; flex-shrink: 0; }
-
+        
         #preview-area { flex-grow: 1; display: flex; padding: 20px; gap: 20px; background: #fafafa; overflow: hidden; position: relative; }
         #upscaled-image { max-width: 65%; max-height: 80vh; object-fit: contain; border: 5px solid black; background: white; display: none; }
         
@@ -51,8 +50,7 @@
 
     <div class="main-container">
         <div id="feed">
-            <div id="sentinel"></div>
-        </div>
+            </div>
         <div id="preview-area">
             <img id="upscaled-image" src="" alt="View">
             <div id="comment-section">
@@ -115,7 +113,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, push, onChildAdded, off, remove, set, get, onValue, query, orderByChild, limitToLast, endBefore, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, push, onChildAdded, off, remove, set, get, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const ringConfig = {
             apiKey: "AIzaSyCcjwKFOaKas5SCxoZg1Tgb6G58YCpmmTc",
@@ -140,41 +138,30 @@
         let currentUser = null;
         let currentPostId = null;
         let currentCommentRef = null;
-        let lastTimestamp = null;
-        let isLoading = false;
-        
-        // --- SANITIZATION TOOL ---
+
         const sanitize = (str) => {
             const div = document.createElement('div');
             div.textContent = str || "";
             return div.innerHTML;
         };
 
-        // --- FEED ---
-        async function loadPosts() {
-            if (isLoading) return;
-            isLoading = true;
-            try {
-                let q = lastTimestamp 
-                    ? query(ref(db, 'posts'), orderByChild('timestamp'), endBefore(lastTimestamp), limitToLast(20))
-                    : query(ref(db, 'posts'), orderByChild('timestamp'), limitToLast(20));
-                const snap = await get(q);
-                const batch = [];
-                snap.forEach(child => { batch.push({ key: child.key, ...child.val() }); });
-                batch.reverse().forEach(post => { renderPost(post); lastTimestamp = post.timestamp; });
-            } catch (e) { console.error(e); }
-            isLoading = false;
-        }
+        // --- REAL-TIME FEED ---
+        onChildAdded(ref(db, 'posts'), (snapshot) => {
+            const post = snapshot.val();
+            renderPost({ key: snapshot.key, ...post });
+        });
 
         function renderPost(post) {
             if (document.getElementById(`thumb-${post.key}`)) return;
+            
             const img = document.createElement('img');
             img.src = post.image;
             img.className = 'post-image';
             img.id = `thumb-${post.key}`;
-            // Store the image data for duplicate checking
             img.dataset.raw = post.image; 
+            
             img.onclick = () => openPreview(post.image, post.key);
+            
             img.oncontextmenu = (e) => {
                 if (currentUser && currentUser.rank === 'Lord') {
                     e.preventDefault();
@@ -189,11 +176,10 @@
                     }
                 }
             };
-            document.getElementById('feed').appendChild(img);
-        }
 
-        const observer = new IntersectionObserver(ent => { if (ent[0].isIntersecting) loadPosts(); }, { threshold: 0.1 });
-        observer.observe(document.getElementById('sentinel'));
+            const feed = document.getElementById('feed');
+            feed.insertBefore(img, feed.firstChild);
+        }
 
         // --- COMMENTS (SANITIZED) ---
         function openPreview(url, id) {
@@ -215,7 +201,7 @@
                 let name = sanitize(c.display_name || "Anonymous");
                 let rank = sanitize(c.rank || "Unknown");
                 let finger = sanitize(c.finger || "Void");
-                let text = sanitize(c.text); // Sanitizing the actual comment text
+                let text = sanitize(c.text);
                 
                 div.innerHTML = `> <b>${name}, ${rank} of the ${finger}:</b> ${text}`;
                 
@@ -241,7 +227,35 @@
             document.getElementById('replyInput').value = '';
         };
 
-        // --- AUTH ---
+        // --- POSTING WITH DUPLICATE CHECK ---
+        document.getElementById('postBtn').onclick = async () => {
+            const file = document.getElementById('imageInput').files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const newImageData = e.target.result;
+
+                let isDuplicate = false;
+                document.querySelectorAll('.post-image').forEach(existingImg => {
+                    if (existingImg.dataset.raw === newImageData) isDuplicate = true;
+                });
+
+                if (isDuplicate) {
+                    alert("TRANSMISSION ABORTED: This visual record already exists in the Ring.");
+                    return;
+                }
+
+                await push(ref(db, 'posts'), { 
+                    image: newImageData, 
+                    timestamp: Date.now() 
+                });
+                document.getElementById('imageInput').value = ""; 
+            };
+            reader.readAsDataURL(file);
+        };
+
+        // --- AUTH & USER DIR ---
         document.getElementById('loginBtn').onclick = async () => {
             const u = document.getElementById('adminUser').value;
             const p = document.getElementById('adminPass').value;
@@ -289,38 +303,6 @@
             });
         }
 
-        // --- POSTING WITH DUPLICATE CHECK ---
-        document.getElementById('postBtn').onclick = async () => {
-            const file = document.getElementById('imageInput').files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                const newImageData = e.target.result;
-
-                // DUPLICATE DETECTION LOGIC
-                let isDuplicate = false;
-                document.querySelectorAll('.post-image').forEach(existingImg => {
-                    if (existingImg.dataset.raw === newImageData) {
-                        isDuplicate = true;
-                    }
-                });
-
-                if (isDuplicate) {
-                    alert("TRANSMISSION ABORTED: This visual record already exists in the Ring.");
-                    return;
-                }
-
-                await push(ref(db, 'posts'), { 
-                    image: newImageData, 
-                    timestamp: Date.now() 
-                });
-                location.reload();
-            };
-            reader.readAsDataURL(file);
-        };
-
-        // --- UI ---
         document.getElementById('auth-btn').onclick = () => {
             const m = document.getElementById('admin-modal'); m.style.display = m.style.display === 'block' ? 'none' : 'block';
         };
