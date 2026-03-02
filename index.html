@@ -145,6 +145,7 @@
             return div.innerHTML;
         };
 
+        // --- RESTORED: LOAD POSTS FROM FIREBASE ---
         onChildAdded(ref(db, 'posts'), (snapshot) => {
             const post = snapshot.val();
             renderPost({ key: snapshot.key, ...post });
@@ -195,14 +196,8 @@
                 const c = snap.val();
                 const div = document.createElement('div');
                 div.className = 'comment-item';
-                
-                let name = sanitize(c.display_name || "Anonymous");
-                let rank = sanitize(c.rank || "Unknown");
-                let finger = sanitize(c.finger || "Void");
-                let text = sanitize(c.text);
-                
+                let name = sanitize(c.display_name || "Anonymous"), rank = sanitize(c.rank || "Unknown"), finger = sanitize(c.finger || "Void"), text = sanitize(c.text);
                 div.innerHTML = `> <b>${name}, ${rank} of the ${finger}:</b> ${text}`;
-                
                 div.onclick = () => { 
                     if(['Lord','Maestro'].includes(currentUser?.rank)) {
                         if(confirm("Delete comment?")) remove(ref(db, `comments/${id}/${snap.key}`));
@@ -228,45 +223,28 @@
         document.getElementById('postBtn').onclick = async () => {
             const file = document.getElementById('imageInput').files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = async (e) => {
                 const newImageData = e.target.result;
-
                 let isDuplicate = false;
-                document.querySelectorAll('.post-image').forEach(existingImg => {
-                    if (existingImg.dataset.raw === newImageData) isDuplicate = true;
-                });
-
-                if (isDuplicate) {
-                    alert("TRANSMISSION ABORTED: This visual record already exists in the Ring.");
-                    return;
-                }
-
-                await push(ref(db, 'posts'), { 
-                    image: newImageData, 
-                    timestamp: Date.now() 
-                });
+                document.querySelectorAll('.post-image').forEach(i => { if (i.dataset.raw === newImageData) isDuplicate = true; });
+                if (isDuplicate) { alert("TRANSMISSION ABORTED: Duplicate record."); return; }
+                await push(ref(db, 'posts'), { image: newImageData, timestamp: Date.now() });
                 document.getElementById('imageInput').value = ""; 
             };
             reader.readAsDataURL(file);
         };
 
         document.getElementById('loginBtn').onclick = async () => {
-            const u = document.getElementById('adminUser').value;
-            const p = document.getElementById('adminPass').value;
+            const u = document.getElementById('adminUser').value, p = document.getElementById('adminPass').value;
             const snap = await get(ref(userDb, `users/${u}`));
             if (snap.exists() && snap.val().password === p) {
-                currentUser = snap.val();
-                currentUser.username = u;
+                currentUser = snap.val(); currentUser.username = u;
                 document.getElementById('login-form').style.display = 'none';
                 document.getElementById('admin-tools').style.display = 'block';
                 document.getElementById('user-welcome').innerText = `${currentUser.display_name}, ${currentUser.rank} of the ${currentUser.finger || 'Void'}`;
                 document.getElementById('auth-btn').innerText = "ACCOUNT INFO";
-                if (currentUser.rank === 'Lord') {
-                    document.getElementById('lord-tools').style.display = 'block';
-                    loadUserDir();
-                }
+                if (currentUser.rank === 'Lord') { document.getElementById('lord-tools').style.display = 'block'; loadUserDir(); }
             } else alert("Access Denied.");
         };
 
@@ -274,25 +252,20 @@
             onValue(ref(userDb, 'users'), snap => {
                 const body = document.getElementById('acc-body'); body.innerHTML = '';
                 snap.forEach(child => {
-                    const uKey = child.key; const d = child.val();
+                    const uKey = child.key, d = child.val();
                     const row = document.createElement('tr');
                     row.innerHTML = `<td><input class="edit-input" data-key="${uKey}" data-field="display_name" value="${sanitize(d.display_name)}"></td>
                                      <td>${sanitize(uKey)}</td>
                                      <td><input class="edit-input" data-key="${uKey}" data-field="password" value="${sanitize(d.password)}"></td>
                                      <td><input class="edit-input" data-key="${uKey}" data-field="rank" value="${sanitize(d.rank)}"></td>
                                      <td><input class="edit-input" data-key="${uKey}" data-field="finger" value="${sanitize(d.finger)}"></td>`;
-                    
-                    const delTd = document.createElement('td');
                     const delBtn = document.createElement('button'); delBtn.textContent = "X"; delBtn.onclick = () => remove(ref(userDb, `users/${uKey}`));
-                    delTd.appendChild(delBtn); row.appendChild(delTd);
+                    const delTd = document.createElement('td'); delTd.appendChild(delBtn); row.appendChild(delTd);
                     body.appendChild(row);
                 });
-
                 document.querySelectorAll('.edit-input').forEach(input => {
                     input.onchange = async (e) => {
-                        const key = e.target.getAttribute('data-key');
-                        const field = e.target.getAttribute('data-field');
-                        const val = e.target.value;
+                        const key = e.target.getAttribute('data-key'), field = e.target.getAttribute('data-field'), val = e.target.value;
                         await update(ref(userDb, `users/${key}`), { [field]: val });
                     };
                 });
