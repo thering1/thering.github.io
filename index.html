@@ -49,8 +49,7 @@
     </div>
 
     <div class="main-container">
-        <div id="feed">
-            </div>
+        <div id="feed"></div>
         <div id="preview-area">
             <img id="upscaled-image" src="" alt="View">
             <div id="comment-section">
@@ -72,6 +71,7 @@
         <a href="https://thering1.github.io/themiddle.github.io/" class="nav-link-btn">THE MIDDLE</a>
         <a href="https://thering1.github.io/theindex.github.io/" class="nav-link-btn">THE INDEX</a>
         <a href="https://thering1.github.io/thepinky.github.io/" class="nav-link-btn">THE PINKY</a>
+        <a href="https://thering1.github.io/thethumb.github.io/" class="nav-link-btn">THE THUMB</a>
     </div>
     
     <button id="auth-btn">SIGN IN</button>
@@ -145,7 +145,6 @@
             return div.innerHTML;
         };
 
-        // --- REAL-TIME FEED ---
         onChildAdded(ref(db, 'posts'), (snapshot) => {
             const post = snapshot.val();
             renderPost({ key: snapshot.key, ...post });
@@ -181,7 +180,6 @@
             feed.insertBefore(img, feed.firstChild);
         }
 
-        // --- COMMENTS (SANITIZED) ---
         function openPreview(url, id) {
             currentPostId = id;
             document.getElementById('upscaled-image').src = url;
@@ -227,7 +225,6 @@
             document.getElementById('replyInput').value = '';
         };
 
-        // --- POSTING WITH DUPLICATE CHECK ---
         document.getElementById('postBtn').onclick = async () => {
             const file = document.getElementById('imageInput').files[0];
             if (!file) return;
@@ -255,7 +252,6 @@
             reader.readAsDataURL(file);
         };
 
-        // --- AUTH & USER DIR ---
         document.getElementById('loginBtn').onclick = async () => {
             const u = document.getElementById('adminUser').value;
             const p = document.getElementById('adminPass').value;
